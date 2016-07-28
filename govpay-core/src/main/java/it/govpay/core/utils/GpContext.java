@@ -308,6 +308,10 @@ public class GpContext {
 		}
 	}
 	
+	public void setResult(Result result) {
+		getContext().getTransaction().setResult(result);
+	}
+	
 	public void setResult(String faultCode) {
 		if(faultCode == null) {
 			getContext().getTransaction().setResult(Result.SUCCESS);

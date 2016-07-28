@@ -51,27 +51,60 @@ import org.openspcoop2.utils.id.serial.IDSerialGeneratorType;
 import org.openspcoop2.utils.id.serial.InfoStatistics;
 
 public class IuvBD extends BasicBD {
+	
+	public enum	Algoritmo {
+		BASE, PAP
+	}
 
 	private static Logger log = Logger.getLogger(IuvBD.class);
 
 	public IuvBD(BasicBD basicBD) {
 		super(basicBD);
 	}
-
+	
 	public Iuv generaIuv(Applicazione applicazione, Dominio dominio, String codVersamentoEnte, int auxDigit, int applicationCode, TipoIUV type) throws ServiceException {
-		long prg = getNextPrgIuv(dominio.getCodDominio(), type);
+		return generaIuv(applicazione, dominio, codVersamentoEnte, auxDigit, applicationCode, type, Algoritmo.BASE, true);
+	}
+
+
+	public Iuv generaIuv(Applicazione applicazione, Dominio dominio, String codVersamentoEnte, int auxDigit, int applicationCode, TipoIUV type, Algoritmo alg, boolean persistence) throws ServiceException {
+		long prg = 0;
 		String iuv = null;
-		switch (type) {
-		case ISO11694:
-			String reference = String.format("%015d", prg);
-			String check = IuvUtils.getCheckDigit(reference);
-			iuv = "RF" + check + reference;
+		switch (alg) {
+		case BASE:
+			prg = getNextPrgIuv(dominio.getCodDominio(), type);
+			
+			switch (type) {
+			case ISO11694:
+				String reference = String.format("%015d", prg);
+				String check = IuvUtils.getCheckDigit(reference);
+				iuv = "RF" + check + reference;
+				break;
+			case NUMERICO:
+				iuv = IuvUtils.buildIuvNumerico(prg, auxDigit, applicationCode);
+				break;
+			}
+			
 			break;
-		case NUMERICO:
-			iuv = IuvUtils.buildIuvNumerico(prg, auxDigit, applicationCode);
+			
+		case PAP:
+			String gd = IuvUtils.retriveActualJulianDate();
+			prg = getNextPrgIuv(dominio.getCodDominio(), type, gd);
+			
+			switch (type) {
+			case ISO11694:
+				String reference = IuvUtils.buildReference(gd, Long.toString(prg));
+				String check = IuvUtils.getCheckDigit(reference);
+				iuv = "RF" + check + reference;
+				break;
+			case NUMERICO:
+				iuv = IuvUtils.buildIuvNumerico(prg, auxDigit, applicationCode);
+				break;
+			}
+			
 			break;
 		}
-
+		
 		Iuv iuvDTO = new Iuv();
 		iuvDTO.setIdDominio(dominio.getId());
 		iuvDTO.setPrg(prg);
@@ -81,7 +114,10 @@ public class IuvBD extends BasicBD {
 		iuvDTO.setTipo(type);
 		iuvDTO.setCodVersamentoEnte(codVersamentoEnte);
 		iuvDTO.setApplicationCode(applicationCode);
-		return insertIuv(iuvDTO);
+		if(persistence)
+			return insertIuv(iuvDTO);
+		else
+			return iuvDTO;
 	}
 
 	public Iuv insertIuv(Iuv iuv) throws ServiceException{
@@ -105,7 +141,11 @@ public class IuvBD extends BasicBD {
 	 * @return prg
 	 * @throws ServiceException
 	 */
+	
 	private long getNextPrgIuv(String codDominio, TipoIUV type) throws ServiceException {
+		return getNextPrgIuv(codDominio, type, "");
+	}
+	private long getNextPrgIuv(String codDominio, TipoIUV type, String gd) throws ServiceException {
 		InfoStatistics infoStat = null;
 		BasicBD bd = null;
 		try {
@@ -114,7 +154,7 @@ public class IuvBD extends BasicBD {
 			org.openspcoop2.utils.id.serial.IDSerialGeneratorParameter params = new org.openspcoop2.utils.id.serial.IDSerialGeneratorParameter("GovPay");
 			params.setTipo(IDSerialGeneratorType.NUMERIC);
 			params.setWrap(false);
-			params.setInformazioneAssociataAlProgressivo(codDominio+type.toString()); // il progressivo sarà relativo a questa informazione
+			params.setInformazioneAssociataAlProgressivo(codDominio + gd + type.toString()); // il progressivo sarà relativo a questa informazione
 
 			java.sql.Connection con = null; 
 
