@@ -32,7 +32,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
-@Path("/pap/psps")
+@Path("/pap/{codDominio}/psps")
 public class PspRestController extends BaseRsService {
 
 	@GET
@@ -47,7 +47,7 @@ public class PspRestController extends BaseRsService {
 		
 		BasicBD bd = null;
 		try {
-			ctx.log("pap.ricevutaRichiestaOk");
+			ctx.log("pap.ricevutaRichiesta");
 			bd = BasicBD.newInstance(ctx.getTransactionId());
 			PspBD pspBD = new PspBD(bd);
 			List<it.govpay.bd.model.Psp> psps = pspBD.getPsp(true);
@@ -86,7 +86,7 @@ public class PspRestController extends BaseRsService {
 			}
 			jsonList.setCount(jsonList.getList().size());
 			ctx.log("pap.ricevutaRichiestaOk");
-			logResponse(uriInfo, httpHeaders,"papRestGeneraIUV", toOutputStream(jsonList));
+			logResponse(uriInfo, httpHeaders,"papRestChiediListaPSP", toOutputStream(jsonList));
 			return Response.status(Status.OK).entity(jsonList).build();
 		} catch (Exception e) {
 			new GovPayException(e).log(log);
@@ -94,7 +94,7 @@ public class PspRestController extends BaseRsService {
 			FaultBean fault = new FaultBean();
 			fault.setFaultCode(FaultCodes.PAP_UNEXPECTED_ERROR.name());
 			fault.setFaultString(e.getMessage());
-			logResponse(uriInfo, httpHeaders,"papRestGeneraIUV", toOutputStream(fault));
+			logResponse(uriInfo, httpHeaders,"papRestChiediListaPSP", toOutputStream(fault));
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(fault).build();
 		} finally {
 			if(ctx != null) {

@@ -45,22 +45,22 @@ public class RtRestController {
 		return Response.status(Status.OK).entity(wsResponse).build();
 	}
 
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response papRestChiediStoricoRT(
-			@QueryParam("startDate") String startDate,
-			@QueryParam("endDate") String endDate,
-			@QueryParam("idUtente") String idUtente,
-			@QueryParam("statoPagamento") String statoPagamento,
-			@DefaultValue(PapConstants.LIST_RESULTS_PARAM) @QueryParam("risultati") Integer risultati,
-			@DefaultValue(PapConstants.LIST_PAGE_PARAM) @QueryParam("pagina") Integer pagina) {
-
-		return Response.status(Status.BAD_REQUEST)
-				.entity("{\"esito\":\"" + PapConstants.ESITO_KO + "\"}")
-				.build();
-
-
-	}
+//	@GET
+//	@Produces(MediaType.APPLICATION_JSON)
+//	public Response papRestChiediStoricoRT(
+//			@QueryParam("startDate") String startDate,
+//			@QueryParam("endDate") String endDate,
+//			@QueryParam("idUtente") String idUtente,
+//			@QueryParam("statoPagamento") String statoPagamento,
+//			@DefaultValue(PapConstants.LIST_RESULTS_PARAM) @QueryParam("risultati") Integer risultati,
+//			@DefaultValue(PapConstants.LIST_PAGE_PARAM) @QueryParam("pagina") Integer pagina) {
+//
+//		return Response.status(Status.BAD_REQUEST)
+//				.entity("{\"esito\":\"" + PapConstants.ESITO_KO + "\"}")
+//				.build();
+//
+//
+//	}
 
 	/*
 	 * Se non viene passato lo iuv viene chiamato questo metodo altrimenti
