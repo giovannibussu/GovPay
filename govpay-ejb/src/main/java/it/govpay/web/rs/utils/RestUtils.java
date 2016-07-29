@@ -7,11 +7,11 @@ import java.io.IOException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 
 import it.govpay.bd.BasicBD;
 import it.govpay.core.exceptions.GovPayException;
-import it.govpay.web.rs.BaseRsService;
 import it.govpay.web.rs.Caricatore;
 import net.sf.json.JSONObject;
 
@@ -30,7 +30,7 @@ public class RestUtils {
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(jsonObject.toString().getBytes());
 
-			BaseRsService.copy(bais, baos);
+			IOUtils.copy(bais, baos);
 
 			baos.flush();
 
@@ -64,7 +64,7 @@ public class RestUtils {
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(jsonObject.toString().getBytes());
 
-			BaseRsService.copy(bais, baos);
+			IOUtils.copy(bais, baos);
 
 			baos.flush();
 

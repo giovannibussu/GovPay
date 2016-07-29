@@ -12,12 +12,12 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.logging.log4j.Logger;
 
 import it.govpay.bd.BasicBD;
-import it.govpay.web.rs.BaseRsService;
 import it.govpay.web.rs.Caricatore;
 import it.govpay.web.rs.model.EstrattoContoRequest;
 import it.govpay.web.rs.model.Pagamento;
@@ -49,7 +49,7 @@ public class PagamentoUtils {
 			
 			JsonConfig jsonConfig = new JsonConfig();
 		
-			BaseRsService.copy(is, baos);
+			IOUtils.copy(is, baos);
 
 			baos.flush();
 			
@@ -107,7 +107,7 @@ public class PagamentoUtils {
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(jsonArray.toString().getBytes());
 
-			BaseRsService.copy(bais, baos);
+			IOUtils.copy(bais, baos);
 
 			baos.flush();
 
@@ -158,7 +158,7 @@ public class PagamentoUtils {
 			
 			ByteArrayInputStream bais = new ByteArrayInputStream(jsonArray.toString().getBytes());
 
-			BaseRsService.copy(bais, baos);
+			IOUtils.copy(bais, baos);
 
 			baos.flush();
 			baos.close();
@@ -182,7 +182,7 @@ public class PagamentoUtils {
 
 		try{
 			log.info("Esecuzione " + nomeMetodo + " in corso...");
-			BaseRsService.copy(response, baos);
+			IOUtils.copy(response, baos);
 			
 			baos.flush();
 

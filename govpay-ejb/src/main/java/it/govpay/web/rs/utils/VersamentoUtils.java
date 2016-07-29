@@ -8,11 +8,11 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.logging.log4j.Logger;
 
 import it.govpay.bd.BasicBD;
-import it.govpay.web.rs.BaseRsService;
 import it.govpay.web.rs.Caricatore;
 import it.govpay.web.rs.model.Versamento;
 import it.govpay.web.rs.model.VersamentoResponse;
@@ -30,11 +30,11 @@ public class VersamentoUtils {
 
 			JsonConfig jsonConfig = new JsonConfig();
 		
-			BaseRsService.copy(is, baos);
+			IOUtils.copy(is, baos);
 
 			baos.flush();
 
-			c.logRequest(uriInfo, httpHeaders, methodName,baos);
+			c.logRequest(uriInfo, httpHeaders, methodName, baos);
 
 			JSONObject jsonObject = JSONObject.fromObject( baos.toString() );  
 			jsonConfig.setRootClass(Versamento.class);
@@ -78,7 +78,7 @@ public class VersamentoUtils {
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(jsonObject.toString().getBytes());
 
-			BaseRsService.copy(bais, baos);
+			IOUtils.copy(bais, baos);
 
 			baos.flush();
 
