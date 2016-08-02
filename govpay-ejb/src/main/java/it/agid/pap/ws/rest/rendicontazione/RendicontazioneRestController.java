@@ -21,6 +21,6 @@ public class RendicontazioneRestController {
 	@Path("/elabora")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response papRestElaboraFlussiRendicontazione() {
-		return Response.status(Status.CREATED).build();
+		return Response.status(Status.OK).build();
 	}
 }

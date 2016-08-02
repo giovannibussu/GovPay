@@ -12,6 +12,8 @@ import it.govpay.core.utils.GpThreadLocal;
 import it.govpay.servizi.commons.EsitoOperazione;
 import it.govpay.web.rs.BaseRsService;
 import it.agid.pap.util.FaultCodes;
+import it.agid.pap.util.PapConstants;
+
 import java.io.InputStream;
 
 import javax.ws.rs.DefaultValue;
@@ -60,6 +62,14 @@ public class NodoRptRestController extends BaseRsService {
 			wsResponse.setEsito(esito);
 			ctx.log("gpprt.ricevutaRichiestaOk");
 			return Response.status(Status.OK).entity(wsResponse).build();
+		} catch (GovPayException e) {
+			e.log(log);
+			ctx.log("pap.ricevutaRichiestaKo", e.getCodEsito().toString(), e.getMessage());
+			FaultBean fault = new FaultBean();
+			fault.setFaultCode(FaultCodes.PAP_UNEXPECTED_ERROR.name());
+			fault.setFaultString(e.getMessage());
+			logResponse(uriInfo, httpHeaders,"papRestNodoChiediStatoRPT", toOutputStream(fault));
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(fault).build();
 		} catch (Exception e) {
 			new GovPayException(e).log(log);
 			ctx.log("gpapp.ricevutaRichiestaKo", EsitoOperazione.INTERNAL.toString(), e.getMessage());
@@ -76,14 +86,14 @@ public class NodoRptRestController extends BaseRsService {
 		}
 	}
 
-//	@GET
-//	@Produces(MediaType.APPLICATION_JSON)
-//	public Response papRestNodoChiediListaPendentiRpt(@QueryParam("from") String rangeDa,
-//			@QueryParam("to") String rangeA, @DefaultValue("10") @QueryParam("size") long pageSize) {
-//
-//		return Response.status(Status.BAD_REQUEST)
-//				.entity("{\"esito\":\"" + PapConstants.ESITO_KO + "\"}")
-//				.build();
-//	}
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response papRestNodoChiediListaPendentiRpt(@QueryParam("from") String rangeDa,
+			@QueryParam("to") String rangeA, @DefaultValue("10") @QueryParam("size") long pageSize) {
+
+		return Response.status(Status.BAD_REQUEST)
+				.entity("{\"esito\":\"" + PapConstants.ESITO_KO + "\"}")
+				.build();
+	}
 
 }

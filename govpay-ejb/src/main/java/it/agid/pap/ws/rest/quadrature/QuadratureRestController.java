@@ -22,7 +22,7 @@ public class QuadratureRestController {
 	@Path("/elabora")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response papRestElaboraFlussiQuadraturaPA() {
-		return Response.status(Status.CREATED).build();
+		return Response.status(Status.OK).build();
 	}
 
 }
