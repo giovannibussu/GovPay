@@ -14,11 +14,15 @@ import it.govpay.servizi.commons.EsitoOperazione;
 import it.govpay.servizi.commons.TipoAutenticazione;
 import it.govpay.servizi.commons.TipoVersamento;
 import it.govpay.servizi.commons.Versamento;
+import it.govpay.servizi.commons.Versamento.SingoloVersamento;
+import it.govpay.servizi.commons.Versamento.SingoloVersamento.Tributo;
+import it.govpay.servizi.commons.TipoContabilita;
 import it.govpay.servizi.gpprt.GpAvviaTransazionePagamento;
 import it.govpay.servizi.gpprt.GpAvviaTransazionePagamentoResponse;
 import it.govpay.servizi.commons.Anagrafica;
 import it.govpay.servizi.commons.Canale;
 import it.govpay.web.rs.BaseRsService;
+import it.agid.pap.model.DatiSingoloVersamento;
 import it.agid.pap.model.RPT;
 import it.agid.pap.util.FaultCodes;
 import it.agid.pap.util.PapConstants;
@@ -99,6 +103,26 @@ public class RptRestController extends BaseRsService {
 			versamento.setCodUnitaOperativa(rpt.getEnteBeneficiario().getCodiceUnitOperBeneficiario());
 			versamento.setCodVersamentoEnte(rpt.getDatiVersamento().getIdentificativoUnivocoVersamento());
 			versamento.setDataScadenza(null);
+			
+			int index = 1;
+			for(DatiSingoloVersamento dsv : rpt.getDatiVersamento().getDatiSingoloVersamento()) {
+				SingoloVersamento sv = new SingoloVersamento();
+				sv.setCodSingoloVersamentoEnte(rpt.getDatiVersamento().getIdentificativoUnivocoVersamento() + "_" + index);
+				sv.setImporto(dsv.getImportoSingoloVersamento());
+				Tributo svt = new Tributo();
+				svt.setCodContabilita(dsv.getCausaleVersamento().substring(2));
+				if(dsv.getCausaleVersamento().substring(0, 1).equals("0"))
+					svt.setTipoContabilita(TipoContabilita.CAPITOLO);
+				if(dsv.getCausaleVersamento().substring(0, 1).equals("1"))
+					svt.setTipoContabilita(TipoContabilita.SPECIALE);
+				if(dsv.getCausaleVersamento().substring(0, 1).equals("2"))
+					svt.setTipoContabilita(TipoContabilita.SIOPE);
+				if(dsv.getCausaleVersamento().substring(0, 1).equals("9"))
+					svt.setTipoContabilita(TipoContabilita.ALTRO);
+				svt.setIbanAccredito(dsv.getIbanAccredito());
+				sv.setTributo(svt);
+				versamento.getSingoloVersamento().add(sv);
+			}
 
 			Anagrafica debitore = new Anagrafica();
 			debitore.setRagioneSociale(rpt.getSoggettoPagatore().getAnagraficaPagatore());
@@ -113,6 +137,7 @@ public class RptRestController extends BaseRsService {
 			versamento.setDebitore(debitore);
 
 			versamento.setIuv(rpt.getDatiVersamento().getIdentificativoUnivocoVersamento());
+			versamento.setImportoTotale(rpt.getDatiVersamento().getImportoTotaleDaVersare());
 			richiesta.getVersamentoOrVersamentoRef().add(versamento);
 
 			it.govpay.bd.model.Canale.TipoVersamento tipoVersamento = it.govpay.bd.model.Canale.TipoVersamento.toEnum(canale.getTipoVersamento().toString());
