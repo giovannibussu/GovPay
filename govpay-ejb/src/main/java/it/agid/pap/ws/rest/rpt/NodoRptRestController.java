@@ -10,9 +10,9 @@ import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
 import it.govpay.servizi.commons.EsitoOperazione;
-import it.govpay.web.rs.BaseRsService;
 import it.agid.pap.util.FaultCodes;
 import it.agid.pap.util.PapConstants;
+import it.agid.pap.ws.rest.BasePapRsService;
 
 import java.io.InputStream;
 
@@ -30,7 +30,11 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
 @Path("/pap/{codDominio}/nodorpts")
-public class NodoRptRestController extends BaseRsService {
+public class NodoRptRestController extends BasePapRsService {
+	
+	public NodoRptRestController() {
+		super("PapRest");
+	}
 
 	@GET
 	@Path("/{iuv}")

@@ -25,6 +25,7 @@ import it.agid.pap.util.PapConstants;
 import it.agid.pap.util.PapUtils;
 import it.agid.pap.ws.clients.json.ChiediRTRisposta;
 import it.agid.pap.ws.clients.json.StatiPraticaRisposta;
+import it.agid.pap.ws.rest.BasePapRsService;
 import it.gov.digitpa.schemas._2011.ws.paa.FaultBean;
 import it.govpay.bd.BasicBD;
 import it.govpay.bd.model.Portale;
@@ -33,10 +34,13 @@ import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
 import it.govpay.servizi.commons.EsitoOperazione;
-import it.govpay.web.rs.BaseRsService;
 
 @Path("/pap/rts")
-public class RtRestController extends BaseRsService {
+public class RtRestController extends BasePapRsService {
+	
+	public RtRestController() {
+		super("PapRest");
+	}
 
 	@GET
 	@Path("/{iuv}")

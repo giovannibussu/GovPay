@@ -76,6 +76,7 @@ public class GovpayConfig {
 	private boolean batchEstrattoConto;
 	private int numeroMesiEstrattoConto, giornoEsecuzioneEstrattoConto;
 	private String pathEstrattoConto;
+	private String guestPapCode;
 
 
 	public GovpayConfig() {
@@ -227,9 +228,6 @@ public class GovpayConfig {
 					this.mLogOnLog4j = Boolean.valueOf(mLogSqlString);
 			}
 
-
-
-
 			String batchEstrattoContoString = getProperty("it.govpay.batch.estrattoConto", props, false);
 			if(batchEstrattoContoString != null && Boolean.valueOf(batchEstrattoContoString))
 				this.batchEstrattoConto = true;
@@ -284,6 +282,8 @@ public class GovpayConfig {
 					this.outHandlers.add(handlerClass);
 				}
 			}
+			
+			this.guestPapCode = getProperty("it.govpay.pap.guestPapCode", props, false);
 
 		} catch (Exception e) {
 			log.warn("Errore di inizializzazione " + e.getMessage() + ". Impostati valori di default."); 
@@ -412,6 +412,10 @@ public class GovpayConfig {
 
 	public String getResourceDir() {
 		return resourceDir;
+	}
+	
+	public String getGuestPapCode() {
+		return guestPapCode;
 	}
 
 }

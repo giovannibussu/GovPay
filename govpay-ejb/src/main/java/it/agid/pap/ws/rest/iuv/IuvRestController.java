@@ -12,8 +12,8 @@ import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
 import it.govpay.servizi.commons.EsitoOperazione;
-import it.govpay.web.rs.BaseRsService;
 import it.agid.pap.util.FaultCodes;
+import it.agid.pap.ws.rest.BasePapRsService;
 
 import java.io.InputStream;
 
@@ -32,7 +32,7 @@ import javax.ws.rs.core.Response.Status;
 import org.openspcoop2.utils.logger.constants.proxy.Result;
 
 @Path(value = "/pap/{codDominio}/iuvs")
-public class IuvRestController extends BaseRsService {
+public class IuvRestController extends BasePapRsService {
 
 	public IuvRestController() {
 		super("PapRest");

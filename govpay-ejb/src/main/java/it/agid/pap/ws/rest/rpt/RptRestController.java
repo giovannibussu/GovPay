@@ -21,11 +21,11 @@ import it.govpay.servizi.gpprt.GpAvviaTransazionePagamento;
 import it.govpay.servizi.gpprt.GpAvviaTransazionePagamentoResponse;
 import it.govpay.servizi.commons.Anagrafica;
 import it.govpay.servizi.commons.Canale;
-import it.govpay.web.rs.BaseRsService;
 import it.agid.pap.model.DatiSingoloVersamento;
 import it.agid.pap.model.RPT;
 import it.agid.pap.util.FaultCodes;
 import it.agid.pap.util.PapConstants;
+import it.agid.pap.ws.rest.BasePapRsService;
 
 import java.io.InputStream;
 
@@ -47,8 +47,12 @@ import javax.ws.rs.core.Response.Status;
 
 
 @Path("/pap/{codDominio}/rpts")
-public class RptRestController extends BaseRsService {
-
+public class RptRestController extends BasePapRsService {
+	
+	public RptRestController() {
+		super("PapRest");
+	}
+	
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)

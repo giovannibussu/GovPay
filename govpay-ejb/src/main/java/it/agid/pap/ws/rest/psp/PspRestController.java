@@ -7,13 +7,13 @@ import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
 import it.govpay.servizi.commons.EsitoOperazione;
-import it.govpay.web.rs.BaseRsService;
 import it.agid.pap.model.psp.InformativaDetail;
 import it.agid.pap.model.psp.InformativaMaster;
 import it.agid.pap.model.psp.PSP;
 import it.agid.pap.util.FaultCodes;
 import it.agid.pap.util.PapConstants;
 import it.agid.pap.ws.clients.json.JsonList;
+import it.agid.pap.ws.rest.BasePapRsService;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -33,7 +33,11 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
 @Path("/pap/{codDominio}/psps")
-public class PspRestController extends BaseRsService {
+public class PspRestController extends BasePapRsService {
+	
+	public PspRestController() {
+		super("PapRest");
+	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
