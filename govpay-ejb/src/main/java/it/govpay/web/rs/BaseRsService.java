@@ -82,10 +82,11 @@ public abstract class BaseRsService {
 		this.request = request;
 	}
 		
-	public void logRequest(UriInfo uriInfo, HttpHeaders rsHttpHeaders,String nomeOperazione,InputStream in) {
+	public ByteArrayOutputStream logRequest(UriInfo uriInfo, HttpHeaders rsHttpHeaders,String nomeOperazione,InputStream in) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try { IOUtils.copy(in, baos); } catch(IOException e) { }
+		try { IOUtils.copy(in, baos); } catch(IOException e) { log.error("Errore nel dump del messaggio", e); }
 		logRequest(uriInfo, rsHttpHeaders, nomeOperazione, baos);
+		return baos;
 	}
 
 	public void logRequest(UriInfo uriInfo, HttpHeaders rsHttpHeaders,String nomeOperazione,ByteArrayOutputStream baos) {
@@ -94,7 +95,7 @@ public abstract class BaseRsService {
 	}
 	
 	public void logResponse(UriInfo uriInfo, HttpHeaders rsHttpHeaders,String nomeOperazione,ByteArrayOutputStream baos) {
-		MessageLoggingHandlerUtils.logToSystemOut(uriInfo, rsHttpHeaders, this.request,baos,
+		MessageLoggingHandlerUtils.logToSystemOut(uriInfo, rsHttpHeaders, this.request, baos,
 				nomeOperazione, this.nomeServizio, GpContext.TIPO_SERVIZIO_GOVPAY_JSON, VERSIONE_SERVIZIO, log, true);
 	}
 

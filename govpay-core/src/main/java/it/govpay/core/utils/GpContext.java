@@ -142,6 +142,8 @@ public class GpContext {
 			client.setInterfaceName(nomeServizio);
 			if(request.getUserPrincipal() != null)
 				client.setPrincipal(request.getUserPrincipal().getName());
+			else
+				client.setPrincipal("<Nessun principal fornito>");
 			
 			transaction.setClient(client);
 			

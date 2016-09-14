@@ -19,6 +19,8 @@ import it.govpay.servizi.commons.Versamento.SingoloVersamento.Tributo;
 import it.govpay.servizi.commons.TipoContabilita;
 import it.govpay.servizi.gpprt.GpAvviaTransazionePagamento;
 import it.govpay.servizi.gpprt.GpAvviaTransazionePagamentoResponse;
+import net.sf.json.JSONObject;
+import net.sf.json.JsonConfig;
 import it.govpay.servizi.commons.Anagrafica;
 import it.govpay.servizi.commons.Canale;
 import it.agid.pap.model.DatiSingoloVersamento;
@@ -27,6 +29,7 @@ import it.agid.pap.util.FaultCodes;
 import it.agid.pap.util.PapConstants;
 import it.agid.pap.ws.rest.BasePapRsService;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
 import javax.ws.rs.Consumes;
@@ -43,6 +46,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
+import org.openspcoop2.generic_project.exception.NotFoundException;
+
 import javax.ws.rs.core.Response.Status;
 
 
@@ -56,10 +62,15 @@ public class RptRestController extends BasePapRsService {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response papRestInviaRpt(InputStream is, @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders, @PathParam("codDominio") String codDominio, RPT rpt) {
+	public Response papRestInviaRpt(InputStream is, @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders, @PathParam("codDominio") String codDominio) {
 
-		logRequest(uriInfo, httpHeaders,"papRestInviaRpt", is);
+		ByteArrayOutputStream baosRequest = logRequest(uriInfo, httpHeaders,"papRestInviaRpt", is);
 
+		JsonConfig jsonConfig = new JsonConfig();
+		JSONObject jsonObject = JSONObject.fromObject( baosRequest.toString() );  
+		jsonConfig.setRootClass(RPT.class);
+		RPT rpt = (RPT) JSONObject.toBean( jsonObject, jsonConfig );
+		
 		GpContext ctx = GpThreadLocal.get();
 
 		BasicBD bd = null;
@@ -145,7 +156,12 @@ public class RptRestController extends BasePapRsService {
 			richiesta.getVersamentoOrVersamentoRef().add(versamento);
 
 			it.govpay.bd.model.Canale.TipoVersamento tipoVersamento = it.govpay.bd.model.Canale.TipoVersamento.toEnum(canale.getTipoVersamento().toString());
-			it.govpay.bd.model.Canale canaleModel = AnagraficaManager.getCanale(bd, canale.getCodPsp(), canale.getCodCanale(), tipoVersamento);
+			it.govpay.bd.model.Canale canaleModel = null;
+			try {
+				canaleModel = AnagraficaManager.getCanale(bd, canale.getCodPsp(), canale.getCodCanale(), tipoVersamento);
+			} catch (NotFoundException e) {
+				throw new GovPayException(EsitoOperazione.PSP_000, canale.getCodPsp(), canale.getCodCanale());
+			}
 
 			Pagamento pagamento = new Pagamento(bd);
 			GpAvviaTransazionePagamentoResponse avviaTransazione = pagamento.avviaTransazione(portale, richiesta, canaleModel);
