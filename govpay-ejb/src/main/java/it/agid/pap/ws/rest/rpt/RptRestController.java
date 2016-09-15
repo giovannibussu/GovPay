@@ -31,6 +31,8 @@ import it.agid.pap.ws.rest.BasePapRsService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -67,6 +69,10 @@ public class RptRestController extends BasePapRsService {
 		ByteArrayOutputStream baosRequest = logRequest(uriInfo, httpHeaders,"papRestInviaRpt", is);
 
 		JsonConfig jsonConfig = new JsonConfig();
+		Map<String,Class<?>> classMap = new HashMap<String, Class<?>>();
+		classMap.put("datiSingoloVersamento", DatiSingoloVersamento.class); 
+		jsonConfig.setClassMap(classMap);
+		
 		JSONObject jsonObject = JSONObject.fromObject( baosRequest.toString() );  
 		jsonConfig.setRootClass(RPT.class);
 		RPT rpt = (RPT) JSONObject.toBean( jsonObject, jsonConfig );
@@ -160,7 +166,7 @@ public class RptRestController extends BasePapRsService {
 			try {
 				canaleModel = AnagraficaManager.getCanale(bd, canale.getCodPsp(), canale.getCodCanale(), tipoVersamento);
 			} catch (NotFoundException e) {
-				throw new GovPayException(EsitoOperazione.PSP_000, canale.getCodPsp(), canale.getCodCanale());
+				throw new GovPayException(EsitoOperazione.PSP_000, canale.getCodPsp(), canale.getCodCanale(), tipoVersamento.name());
 			}
 
 			Pagamento pagamento = new Pagamento(bd);
