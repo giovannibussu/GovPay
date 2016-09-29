@@ -118,11 +118,15 @@ public class RptRestController extends BasePapRsService {
 			versamento.setAggiornabile(false);
 			versamento.setAnnoTributario(null);
 			versamento.setBundlekey(null);
-			versamento.setCausale(null);
+			versamento.setCausale("");
 			versamento.setCodApplicazione(applicazione.getCodApplicazione());
 			versamento.setCodDebito(null);
 			versamento.setCodDominio(codDominio);
 			versamento.setCodUnitaOperativa(rpt.getEnteBeneficiario().getCodiceUnitOperBeneficiario());
+			
+			if(rpt.getDatiVersamento().getIdentificativoUnivocoVersamento() == null || rpt.getDatiVersamento().getIdentificativoUnivocoVersamento().isEmpty())
+				throw new Exception("IUV non valorizzato");
+				
 			versamento.setCodVersamentoEnte(rpt.getDatiVersamento().getIdentificativoUnivocoVersamento());
 			versamento.setDataScadenza(null);
 			
@@ -132,14 +136,14 @@ public class RptRestController extends BasePapRsService {
 				sv.setCodSingoloVersamentoEnte(rpt.getDatiVersamento().getIdentificativoUnivocoVersamento() + "_" + index);
 				sv.setImporto(dsv.getImportoSingoloVersamento());
 				Tributo svt = new Tributo();
-				svt.setCodContabilita(dsv.getCausaleVersamento().substring(2));
-				if(dsv.getCausaleVersamento().substring(0, 1).equals("0"))
+				svt.setCodContabilita(dsv.getDatiSpecificiRiscossione().substring(2));
+				if(dsv.getDatiSpecificiRiscossione().substring(0, 1).equals("0"))
 					svt.setTipoContabilita(TipoContabilita.CAPITOLO);
-				if(dsv.getCausaleVersamento().substring(0, 1).equals("1"))
+				else if(dsv.getDatiSpecificiRiscossione().substring(0, 1).equals("1"))
 					svt.setTipoContabilita(TipoContabilita.SPECIALE);
-				if(dsv.getCausaleVersamento().substring(0, 1).equals("2"))
+				else if(dsv.getDatiSpecificiRiscossione().substring(0, 1).equals("2"))
 					svt.setTipoContabilita(TipoContabilita.SIOPE);
-				if(dsv.getCausaleVersamento().substring(0, 1).equals("9"))
+				else 
 					svt.setTipoContabilita(TipoContabilita.ALTRO);
 				svt.setIbanAccredito(dsv.getIbanAccredito());
 				sv.setTributo(svt);
@@ -172,7 +176,6 @@ public class RptRestController extends BasePapRsService {
 
 			Pagamento pagamento = new Pagamento(bd);
 			GpAvviaTransazionePagamentoResponse avviaTransazione = pagamento.avviaTransazione(portale, richiesta, canaleModel);
-
 
 			NodoInviaRPTRisposta wsResponse = new NodoInviaRPTRisposta();
 			wsResponse.setEsito("OK");
