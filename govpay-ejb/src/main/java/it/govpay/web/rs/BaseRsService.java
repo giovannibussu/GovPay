@@ -82,9 +82,9 @@ public abstract class BaseRsService {
 		this.request = request;
 	}
 		
-	public ByteArrayOutputStream logRequest(UriInfo uriInfo, HttpHeaders rsHttpHeaders,String nomeOperazione,InputStream in) {
+	public ByteArrayOutputStream logRequest(UriInfo uriInfo, HttpHeaders rsHttpHeaders,String nomeOperazione,InputStream in) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try { IOUtils.copy(in, baos); } catch(IOException e) { log.error("Errore nel dump del messaggio", e); }
+		IOUtils.copy(in, baos);
 		logRequest(uriInfo, rsHttpHeaders, nomeOperazione, baos);
 		return baos;
 	}

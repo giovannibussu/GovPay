@@ -66,21 +66,22 @@ public class RptRestController extends BasePapRsService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response papRestInviaRpt(InputStream is, @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders, @PathParam("codDominio") String codDominio) {
 
-		ByteArrayOutputStream baosRequest = logRequest(uriInfo, httpHeaders,"papRestInviaRpt", is);
-
-		JsonConfig jsonConfig = new JsonConfig();
-		Map<String,Class<?>> classMap = new HashMap<String, Class<?>>();
-		classMap.put("datiSingoloVersamento", DatiSingoloVersamento.class); 
-		jsonConfig.setClassMap(classMap);
-		
-		JSONObject jsonObject = JSONObject.fromObject( baosRequest.toString() );  
-		jsonConfig.setRootClass(RPT.class);
-		RPT rpt = (RPT) JSONObject.toBean( jsonObject, jsonConfig );
-		
 		GpContext ctx = GpThreadLocal.get();
 
 		BasicBD bd = null;
 		try {
+			
+			ByteArrayOutputStream baosRequest = logRequest(uriInfo, httpHeaders,"papRestInviaRpt", is);
+
+			JsonConfig jsonConfig = new JsonConfig();
+			Map<String,Class<?>> classMap = new HashMap<String, Class<?>>();
+			classMap.put("datiSingoloVersamento", DatiSingoloVersamento.class); 
+			jsonConfig.setClassMap(classMap);
+			
+			JSONObject jsonObject = JSONObject.fromObject( baosRequest.toString() );  
+			jsonConfig.setRootClass(RPT.class);
+			RPT rpt = (RPT) JSONObject.toBean( jsonObject, jsonConfig );
+			
 			ctx.log("pap.ricevutaRichiesta");
 			bd = BasicBD.newInstance(ctx.getTransactionId());
 

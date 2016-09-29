@@ -35,6 +35,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.openspcoop2.generic_project.exception.NotFoundException;
 import org.openspcoop2.generic_project.expression.SortOrder;
 
@@ -1023,6 +1024,11 @@ public class PortaliHandler extends BaseDarsHandler<Portale> implements IDarsHan
 
 		return sb.toString();
 	}
+	
+	@Override
+	public List<String> getValori(Portale entry, BasicBD bd) throws ConsoleException {
+		return null;
+	}
 
 	@Override
 	public String esporta(List<Long> idsToExport, UriInfo uriInfo, BasicBD bd, ZipOutputStream zout)
@@ -1035,4 +1041,6 @@ public class PortaliHandler extends BaseDarsHandler<Portale> implements IDarsHan
 		return null;
 	}
 
+	@Override
+	public Object uplaod(MultipartFormDataInput input, UriInfo uriInfo, BasicBD bd)	throws WebApplicationException, ConsoleException, ValidationException { return null;}
 }

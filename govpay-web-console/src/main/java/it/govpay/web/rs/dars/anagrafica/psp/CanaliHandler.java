@@ -30,6 +30,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.logging.log4j.Logger;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import it.govpay.bd.BasicBD;
 import it.govpay.bd.model.Canale;
@@ -230,6 +231,11 @@ public class CanaliHandler extends BaseDarsHandler<it.govpay.bd.model.Canale> im
 
 		return sb.toString();
 	}
+	
+	@Override
+	public List<String> getValori(Canale entry, BasicBD bd) throws ConsoleException {
+		return null;
+	}
 
 	@Override
 	public String esporta(List<Long> idsToExport, UriInfo uriInfo, BasicBD bd, ZipOutputStream zout)
@@ -241,4 +247,7 @@ public class CanaliHandler extends BaseDarsHandler<it.govpay.bd.model.Canale> im
 	public String esporta(Long idToExport, UriInfo uriInfo, BasicBD bd, ZipOutputStream zout)	throws WebApplicationException, ConsoleException {
 		return null;
 	}
+	
+	@Override
+	public Object uplaod(MultipartFormDataInput input, UriInfo uriInfo, BasicBD bd)	throws WebApplicationException, ConsoleException, ValidationException { return null;}
 }

@@ -43,10 +43,11 @@ public class IuvRestController extends BasePapRsService {
 	public Response papRestGeneraIUV(InputStream is, @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders, @PathParam("codDominio") String codDominio, @DefaultValue("true")@QueryParam(value="iso11649") boolean  iso11649) {
 		
 		log.info("Richiesta operazione gpGeneraIuv");
-		logRequest(uriInfo, httpHeaders,"papRestGeneraIUV", is);
 		GpContext ctx = GpThreadLocal.get();
 		BasicBD bd = null;
 		try {
+			logRequest(uriInfo, httpHeaders,"papRestGeneraIUV", is);
+
 			bd = BasicBD.newInstance(ctx.getTransactionId());
 			Applicazione applicazioneAutenticata = getApplicazioneAutenticata(bd);
 			ctx.log("pap.ricevutaRichiesta");

@@ -43,12 +43,12 @@ public class NodoRptRestController extends BasePapRsService {
 
 		log.info("Richiesta operazione papRestNodoChiediStatoRPT per la transazione con dominio (" + codDominio + "), iuv (" +  iuv +") e ccp (" + codicePagamento + ")");
 		
-		logRequest(uriInfo, httpHeaders, "papRestNodoChiediStatoRPT", is);
-		
 		GpContext ctx = GpThreadLocal.get();
 		
 		BasicBD bd = null;
 		try {
+			logRequest(uriInfo, httpHeaders, "papRestNodoChiediStatoRPT", is);
+			
 			ctx.log("pap.ricevutaRichiesta");
 			bd = BasicBD.newInstance(ctx.getTransactionId());
 			

@@ -37,6 +37,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.openspcoop2.generic_project.exception.ServiceException;
 import org.openspcoop2.generic_project.expression.SortOrder;
 
@@ -118,10 +119,8 @@ public class VersamentiHandler extends BaseDarsHandler<Versamento> implements ID
 
 			VersamentiBD versamentiBD = new VersamentiBD(bd);
 			AclBD aclBD = new AclBD(bd);
-
 			List<Acl> aclOperatore = aclBD.getAclOperatore(operatore.getId());
 			List<Long> idDomini = new ArrayList<Long>();
-
 			VersamentoFilter filter = versamentiBD.newFilter();
 			filter.setOffset(offset);
 			filter.setLimit(limit);
@@ -575,6 +574,11 @@ public class VersamentiHandler extends BaseDarsHandler<Versamento> implements ID
 
 		return sb.toString();
 	} 
+	
+	@Override
+	public List<String> getValori(Versamento entry, BasicBD bd) throws ConsoleException {
+		return null;
+	}
 
 	@Override
 	public String esporta(List<Long> idsToExport, UriInfo uriInfo, BasicBD bd, ZipOutputStream zout)
@@ -834,4 +838,7 @@ public class VersamentiHandler extends BaseDarsHandler<Versamento> implements ID
 
 	@Override
 	public Dettaglio update(InputStream is, UriInfo uriInfo, BasicBD bd) throws WebApplicationException, ConsoleException, ValidationException { return null; }
+	
+	@Override
+	public Object uplaod(MultipartFormDataInput input, UriInfo uriInfo, BasicBD bd)	throws WebApplicationException, ConsoleException, ValidationException { return null;}
 }
