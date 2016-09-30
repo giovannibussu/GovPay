@@ -99,7 +99,8 @@ public class VersamentoConverter {
 			vo.setDataCreazione(dto.getDataCreazione());
 			vo.setDataScadenza(dto.getDataScadenza());
 			vo.setDataOraUltimoAggiornamento(dto.getDataUltimoAggiornamento());
-			vo.setCausaleVersamento(dto.getCausaleVersamento().encode());
+			if(dto.getCausaleVersamento() != null)
+				vo.setCausaleVersamento(dto.getCausaleVersamento().encode());
 			Anagrafica anagraficaDebitore = dto.getAnagraficaDebitore();
 			vo.setDebitoreAnagrafica(anagraficaDebitore.getRagioneSociale());
 			vo.setDebitoreCap(anagraficaDebitore.getCap());

@@ -118,7 +118,7 @@ public class RptRestController extends BasePapRsService {
 			versamento.setAggiornabile(false);
 			versamento.setAnnoTributario(null);
 			versamento.setBundlekey(null);
-			versamento.setCausale("");
+			versamento.setCausale(null);
 			versamento.setCodApplicazione(applicazione.getCodApplicazione());
 			versamento.setCodDebito(null);
 			versamento.setCodDominio(codDominio);

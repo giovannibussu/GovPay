@@ -187,7 +187,8 @@ public class Versamento extends BasicModel {
 	}
 	
 	public void setCausaleVersamento(String causaleVersamentoEncoded) throws UnsupportedEncodingException {
-		this.causaleVersamento = Versamento.decode(causaleVersamentoEncoded);
+		if(causaleVersamentoEncoded != null)
+			this.causaleVersamento = Versamento.decode(causaleVersamentoEncoded);
 	}
 	
 	public interface Causale {
