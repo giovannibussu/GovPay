@@ -50,6 +50,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.openspcoop2.generic_project.exception.NotFoundException;
+import org.openspcoop2.utils.logger.beans.Property;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -83,6 +84,19 @@ public class RptRestController extends BasePapRsService {
 			RPT rpt = (RPT) JSONObject.toBean( jsonObject, jsonConfig );
 			
 			ctx.log("pap.ricevutaRichiesta");
+			
+			ctx.getContext().getRequest().addGenericProperty(new Property("codDominio", codDominio));
+			
+			if(rpt.getDatiVersamento().getIdentificativoUnivocoVersamento() == null || rpt.getDatiVersamento().getIdentificativoUnivocoVersamento().isEmpty()) 
+				throw new Exception("IUV non valorizzato");
+				
+			ctx.getContext().getRequest().addGenericProperty(new Property("iuv", rpt.getDatiVersamento().getIdentificativoUnivocoVersamento()));
+			ctx.getContext().getRequest().addGenericProperty(new Property("codPsp", rpt.getIdentificativoPSP()));
+			ctx.getContext().getRequest().addGenericProperty(new Property("codCanale", rpt.getIdentificativoCanale()));
+			ctx.getContext().getRequest().addGenericProperty(new Property("tipoVersamento", rpt.getDatiVersamento().getTipoVersamento()));
+			ctx.log("pap.inviaRpt");
+			
+			
 			bd = BasicBD.newInstance(ctx.getTransactionId());
 
 			Portale portale = getPortaleAutenticato(bd);
@@ -123,10 +137,6 @@ public class RptRestController extends BasePapRsService {
 			versamento.setCodDebito(null);
 			versamento.setCodDominio(codDominio);
 			versamento.setCodUnitaOperativa(rpt.getEnteBeneficiario().getCodiceUnitOperBeneficiario());
-			
-			if(rpt.getDatiVersamento().getIdentificativoUnivocoVersamento() == null || rpt.getDatiVersamento().getIdentificativoUnivocoVersamento().isEmpty())
-				throw new Exception("IUV non valorizzato");
-				
 			versamento.setCodVersamentoEnte(rpt.getDatiVersamento().getIdentificativoUnivocoVersamento());
 			versamento.setDataScadenza(null);
 			
@@ -179,6 +189,13 @@ public class RptRestController extends BasePapRsService {
 
 			NodoInviaRPTRisposta wsResponse = new NodoInviaRPTRisposta();
 			wsResponse.setEsito("OK");
+			
+			if(avviaTransazione.getUrlRedirect() != null) {
+				ctx.getContext().getResponse().addGenericProperty(new Property("codPspSession", avviaTransazione.getPspSessionId()));
+				ctx.log("pap.inviaRptOk");
+			} else {
+				ctx.log("pap.inviaRptOkNoRedirect");
+			}
 			wsResponse.setRedirect(avviaTransazione.getUrlRedirect() != null ? 1 : 0);
 			wsResponse.setUrl(avviaTransazione.getUrlRedirect());
 
@@ -192,6 +209,8 @@ public class RptRestController extends BasePapRsService {
 			fault.setFaultCode(FaultCodes.PAP_UNEXPECTED_ERROR.name());
 			fault.setFaultString(e.getMessage());
 			logResponse(uriInfo, httpHeaders,"papRestInviaRpt", toOutputStream(fault));
+			
+			ctx.log("pap.inviaRptKo", fault.getFaultCode(), fault.getFaultString());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(fault).build();
 		} catch (Exception e) {
 			new GovPayException(e).log(log);
@@ -200,6 +219,7 @@ public class RptRestController extends BasePapRsService {
 			fault.setFaultCode(FaultCodes.PAP_UNEXPECTED_ERROR.name());
 			fault.setFaultString(e.getMessage());
 			logResponse(uriInfo, httpHeaders,"papRestInviaRpt", toOutputStream(fault));
+			ctx.log("pap.inviaRptKo", fault.getFaultCode(), fault.getFaultString());
 			return Response.status(Status.BAD_REQUEST).entity(fault).build();
 		} finally {
 			if(ctx != null) {

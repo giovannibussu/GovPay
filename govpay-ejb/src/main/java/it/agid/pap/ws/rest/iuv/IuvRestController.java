@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
+import org.openspcoop2.utils.logger.beans.Property;
 import org.openspcoop2.utils.logger.constants.proxy.Result;
 
 @Path(value = "/pap/{codDominio}/iuvs")
@@ -54,6 +55,11 @@ public class IuvRestController extends BasePapRsService {
 			IuvBD iuvBD = new IuvBD(bd);
 			Dominio dominio = AnagraficaManager.getDominio(bd, codDominio);
 			Iuv iuv = iuvBD.generaIuv(applicazioneAutenticata, dominio, null, it.govpay.model.Iuv.AUX_DIGIT, dominio.getStazione(bd).getApplicationCode(), it.govpay.model.Iuv.TipoIUV.ISO11694, Algoritmo.PAP, false);
+			
+			ctx.getContext().getRequest().addGenericProperty(new Property("codDominio", codDominio));
+			ctx.getContext().getRequest().addGenericProperty(new Property("iuv", iuv.getIuv()));
+			ctx.log("pap.generaIuvOk");
+			
 			ctx.log("pap.ricevutaRichiestaOk");
 			ctx.setResult(Result.SUCCESS);
 			Object entity = "{\"iuv\" : \"" + iuv.getIuv() + "\"}";
