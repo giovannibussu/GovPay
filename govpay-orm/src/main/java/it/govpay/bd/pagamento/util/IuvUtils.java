@@ -33,6 +33,8 @@ public class IuvUtils {
 	private static final int REFERENCE_CODE_PART_LENGTH = 15;
 	
 	public static boolean checkISO11640(String iuv){
+		if(iuv.length() <= 4) return false;
+		
 		String reference = iuv.substring(4);
 		String check;
 		try {
