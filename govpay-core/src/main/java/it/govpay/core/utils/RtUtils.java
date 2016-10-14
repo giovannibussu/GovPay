@@ -22,10 +22,12 @@
 package it.govpay.core.utils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openspcoop2.generic_project.exception.NotFoundException;
@@ -40,16 +42,6 @@ import it.gov.digitpa.schemas._2011.pagamenti.CtDatiVersamentoRT;
 import it.gov.digitpa.schemas._2011.pagamenti.CtRicevutaTelematica;
 import it.gov.digitpa.schemas._2011.pagamenti.CtRichiestaPagamentoTelematico;
 import it.govpay.bd.BasicBD;
-import it.govpay.bd.model.Notifica;
-import it.govpay.bd.model.Notifica.TipoNotifica;
-import it.govpay.bd.model.Pagamento;
-import it.govpay.bd.model.Rpt;
-import it.govpay.bd.model.Rpt.FirmaRichiesta;
-import it.govpay.bd.model.Rpt.StatoRpt;
-import it.govpay.bd.model.SingoloVersamento;
-import it.govpay.bd.model.SingoloVersamento.StatoSingoloVersamento;
-import it.govpay.bd.model.Versamento;
-import it.govpay.bd.model.Versamento.StatoVersamento;
 import it.govpay.bd.pagamento.NotificheBD;
 import it.govpay.bd.pagamento.PagamentiBD;
 import it.govpay.bd.pagamento.RptBD;
@@ -58,6 +50,16 @@ import it.govpay.core.exceptions.NdpException;
 import it.govpay.core.exceptions.NdpException.FaultPa;
 import it.govpay.core.utils.thread.InviaNotificaThread;
 import it.govpay.core.utils.thread.ThreadExecutorManager;
+import it.govpay.bd.model.Notifica;
+import it.govpay.bd.model.Pagamento;
+import it.govpay.bd.model.Rpt;
+import it.govpay.bd.model.SingoloVersamento;
+import it.govpay.bd.model.Versamento;
+import it.govpay.model.Notifica.TipoNotifica;
+import it.govpay.model.Rpt.FirmaRichiesta;
+import it.govpay.model.Rpt.StatoRpt;
+import it.govpay.model.SingoloVersamento.StatoSingoloVersamento;
+import it.govpay.model.Versamento.StatoVersamento;
 
 public class RtUtils extends NdpValidationUtils {
 	
@@ -91,16 +93,16 @@ public class RtUtils extends NdpValidationUtils {
 	private static byte[] validaFirmaXades(byte[] rt, String idDominio) throws NdpException {
 		try {
 			return SignUtils.cleanXadesSignedFile(rt);
-		} catch (Exception e) {
-			throw new NdpException(FaultPa.PAA_FIRMA_ERRATA, idDominio);
+		} catch (Throwable e) {
+			throw new NdpException(FaultPa.PAA_FIRMA_ERRATA, idDominio, e.getMessage());
 		}
 	}
 
 	private static byte[] validaFirmaCades(byte[] rt, String idDominio) throws NdpException {		
 		try {
 			return SignUtils.cleanCadesSignedFile(rt);
-		} catch (Exception e) {
-			throw new NdpException(FaultPa.PAA_FIRMA_ERRATA, idDominio);
+		} catch (Throwable e) {
+			throw new NdpException(FaultPa.PAA_FIRMA_ERRATA, idDominio, e.getMessage());
 		}
 	}
 
@@ -324,6 +326,19 @@ public class RtUtils extends NdpValidationUtils {
 			if(singoloVersamento.getStatoSingoloVersamento().equals(StatoSingoloVersamento.NON_ESEGUITO) && singoloVersamento.getImportoSingoloVersamento().compareTo(pagamento.getImportoPagato()) == 0)
 				singoloVersamento.setStatoSingoloVersamento(StatoSingoloVersamento.ESEGUITO);
 			else {
+				List<String> anomalie = new ArrayList<String>();
+				
+				if(!singoloVersamento.getStatoSingoloVersamento().equals(StatoSingoloVersamento.NON_ESEGUITO)) {
+					anomalie.add("La voce del versamento [CodVersamentoEnte:" + singoloVersamento.getVersamento(bd).getCodVersamentoEnte() + " CodSingoloVersamentoEnte:" + singoloVersamento.getCodSingoloVersamentoEnte() + "] a cui riferisce il pagamento e' in stato [" + singoloVersamento.getStatoSingoloVersamento().toString() + "].");
+					log.warn("La voce del versamento [CodVersamentoEnte:" + singoloVersamento.getVersamento(bd).getCodVersamentoEnte() + " CodSingoloVersamentoEnte:" + singoloVersamento.getCodSingoloVersamentoEnte() + "] a cui riferisce il pagamento e' in stato [" + singoloVersamento.getStatoSingoloVersamento().toString() + "].");
+				}
+				
+				if(singoloVersamento.getImportoSingoloVersamento().compareTo(pagamento.getImportoPagato()) != 0) {
+					anomalie.add("La voce del versamento [CodVersamentoEnte:" + singoloVersamento.getVersamento(bd).getCodVersamentoEnte() + " CodSingoloVersamentoEnte:" + singoloVersamento.getCodSingoloVersamentoEnte() + "] a cui riferisce il pagamento presenta un importo [" + singoloVersamento.getImportoSingoloVersamento() + "] che non corrisponde a quanto pagato [" + pagamento.getImportoPagato() + "].");
+					log.warn("La voce del versamento [CodVersamentoEnte:" + singoloVersamento.getVersamento(bd).getCodVersamentoEnte() + " CodSingoloVersamentoEnte:" + singoloVersamento.getCodSingoloVersamentoEnte() + "] a cui riferisce il pagamento presenta un importo [" + singoloVersamento.getImportoSingoloVersamento() + "] che non corrisponde a quanto pagato [" + pagamento.getImportoPagato() + "].");
+				}
+				ctx.log("pagamento.acquisizionePagamentoAnomalo", ctDatiSingoloPagamentoRT.getIdentificativoUnivocoRiscossione(), StringUtils.join(anomalie,"\n"));
+				
 				singoloVersamento.setStatoSingoloVersamento(StatoSingoloVersamento.ANOMALO);
 				irregolare = true;
 			}

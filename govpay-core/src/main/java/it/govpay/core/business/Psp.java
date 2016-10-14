@@ -44,18 +44,19 @@ import it.gov.digitpa.schemas._2011.ws.paa.NodoChiediInformativaPSPRisposta;
 import it.govpay.bd.BasicBD;
 import it.govpay.bd.anagrafica.DominiBD;
 import it.govpay.bd.anagrafica.PspBD;
-import it.govpay.bd.model.Canale;
-import it.govpay.bd.model.Dominio;
-import it.govpay.bd.model.Intermediario;
-import it.govpay.bd.model.Portale;
-import it.govpay.bd.model.Stazione;
 import it.govpay.servizi.commons.EsitoOperazione;
 import it.govpay.servizi.gpprt.GpChiediListaPspResponse;
 import it.govpay.core.exceptions.GovPayException;
+import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
 import it.govpay.core.utils.PspUtils;
 import it.govpay.core.utils.client.NodoClient;
 import it.govpay.core.utils.client.NodoClient.Azione;
+import it.govpay.bd.model.Canale;
+import it.govpay.bd.model.Dominio;
+import it.govpay.model.Intermediario;
+import it.govpay.model.Portale;
+import it.govpay.bd.model.Stazione;
 
 public class Psp extends BasicBD {
 	
@@ -79,7 +80,7 @@ public class Psp extends BasicBD {
 			psp.setRagioneSociale(pspModel.getRagioneSociale());
 			psp.setStorno(pspModel.isStornoGestito());
 			psp.setUrlInfo(pspModel.getUrlInfo());
-			for(it.govpay.bd.model.Canale canaleModel : pspModel.getCanali()) {
+			for(it.govpay.bd.model.Canale canaleModel : pspModel.getCanalis()) {
 				GpChiediListaPspResponse.Psp.Canale canale = new GpChiediListaPspResponse.Psp.Canale();
 				canale.setCodCanale(canaleModel.getCodCanale());
 				canale.setCondizioni(canaleModel.getCondizioni());
@@ -100,8 +101,10 @@ public class Psp extends BasicBD {
 	public String aggiornaRegistro() throws GovPayException {
 		List<String> response = new ArrayList<String>();
 		
+		GpContext ctx = GpThreadLocal.get();
+		
 		log.info("Aggiornamento del Registro PSP");
-		GpThreadLocal.get().log("psp.aggiornamentoPsp");
+		ctx.log("psp.aggiornamentoPsp");
 		String transactionId = null;
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
@@ -111,7 +114,7 @@ public class Psp extends BasicBD {
 			
 			if(domini.size() == 0) {
 				log.warn("Nessun dominio registrato. Impossibile richiedere il catalogo dei Psp.");
-				GpThreadLocal.get().log("psp.aggiornamentoPspNoDomini");
+				ctx.log("psp.aggiornamentoPspNoDomini");
 				throw new GovPayException(EsitoOperazione.INTERNAL, "Nessun dominio registrato. Impossibile richiedere il catalogo dei Psp.");
 			}
 			// Finche' non ricevo un catalogo di informativa, provo per tutti i domini.
@@ -121,11 +124,11 @@ public class Psp extends BasicBD {
 				Stazione stazione = dominio.getStazione(this);
 				Intermediario intermediario = stazione.getIntermediario(this);
 
-				transactionId = GpThreadLocal.get().openTransaction();
-				GpThreadLocal.get().getContext().getRequest().addGenericProperty(new Property("codDominio", dominio.getCodDominio()));
-				GpThreadLocal.get().getContext().getRequest().addGenericProperty(new Property("codStazione", stazione.getCodStazione()));
-				GpThreadLocal.get().setupNodoClient(stazione.getCodStazione(), dominio.getCodDominio(), Azione.nodoChiediInformativaPSP);
-				GpThreadLocal.get().log("psp.aggiornamentoPspRichiesta");
+				transactionId = ctx.openTransaction();
+				ctx.getContext().getRequest().addGenericProperty(new Property("codDominio", dominio.getCodDominio()));
+				ctx.getContext().getRequest().addGenericProperty(new Property("codStazione", stazione.getCodStazione()));
+				ctx.setupNodoClient(stazione.getCodStazione(), dominio.getCodDominio(), Azione.nodoChiediInformativaPSP);
+				ctx.log("psp.aggiornamentoPspRichiesta");
 				
 				closeConnection();
 				
@@ -153,12 +156,12 @@ public class Psp extends BasicBD {
 						Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 						informativePsp = (ListaInformativePSP) jaxbUnmarshaller.unmarshal(risposta.getXmlInformativa().getDataSource().getInputStream());
 					} finally {
-						setupConnection(GpThreadLocal.get().getTransactionId());
+						setupConnection(ctx.getTransactionId());
 					}
 					
 					if(informativePsp == null) {
 						log.warn("Catalogo dei psp non acquisito. Impossibile aggiornare il registro.");
-						GpThreadLocal.get().log("psp.aggiornamentoPspRichiestaKo", "Catalogo dei psp vuoto.");
+						ctx.log("psp.aggiornamentoPspRichiestaKo", "Catalogo dei psp vuoto.");
 						throw new GovPayException(EsitoOperazione.INTERNAL, "Catalogo dei psp non acquisito. Impossibile aggiornare il registro.");
 					}
 					
@@ -192,7 +195,7 @@ public class Psp extends BasicBD {
 							canale.setTipoVersamento(Canale.TipoVersamento.toEnum(informativaPspDetail.getTipoVersamento().name()));
 							canale.setUrlInfo(informativaPspDetail.getUrlInformazioniCanale());
 							canale.setCodIntermediario(informativaPspDetail.getIdentificativoIntermediario());
-							psp.getCanali().add(canale);
+							psp.getCanalis().add(canale);
 						}
 						catalogoPsp.add(psp);
 						log.debug("Acquisita informativa [codPsp: " + psp.getCodPsp() + "]");
@@ -207,15 +210,16 @@ public class Psp extends BasicBD {
 					PspBD pspBD = new PspBD(this);
 					List<it.govpay.bd.model.Psp> oldPsps = pspBD.getPsp();
 					while(!oldPsps.isEmpty()) {
-						it.govpay.bd.model.Psp psp = oldPsps.remove(0);
+						it.govpay.model.Psp psp = oldPsps.remove(0);
 						// Cerco il psp nel Catalogo appena ricevuto
 						boolean trovato = false;
 						for(int i = 0; i<catalogoPsp.size(); i++ ) {
 							if(catalogoPsp.get(i).getCodPsp().equals(psp.getCodPsp())) {
+								
 								// Il psp e' nel catalogo, va aggiornato. 
 								// Rimuovo la versione aggiornata dal catalogo e lo mando in update
 								log.info("Aggiornamento [codPsp: " + psp.getCodPsp() + "]");
-								GpThreadLocal.get().log("psp.aggiornamentoPspAggiornatoPSP", psp.getCodPsp(), psp.getRagioneSociale());
+								ctx.log("psp.aggiornamentoPspAggiornatoPSP", psp.getCodPsp(), psp.getRagioneSociale());
 								response.add(psp.getRagioneSociale() + " (" + psp.getCodPsp() + ")#Acquisita versione aggiornata.");
 								pspBD.updatePsp(catalogoPsp.get(i));
 								catalogoPsp.remove(i);
@@ -229,7 +233,7 @@ public class Psp extends BasicBD {
 							// Se era attivo, lo disattivo.
 							if(psp.isAbilitato()) {
 								log.info("Disabilitazione [codPsp: " + psp.getCodPsp() + "]");
-								GpThreadLocal.get().log("psp.aggiornamentoPspDisabilitatoPSP", psp.getCodPsp(), psp.getRagioneSociale());
+								ctx.log("psp.aggiornamentoPspDisabilitatoPSP", psp.getCodPsp(), psp.getRagioneSociale());
 								response.add(psp.getRagioneSociale() + " (" + psp.getCodPsp() + ")#Disabilitato.");
 								pspBD.disablePsp(psp.getId());
 							}
@@ -239,7 +243,7 @@ public class Psp extends BasicBD {
 					// I psp rimasti nel catalogo, sono nuovi e vanno aggiunti
 					for(it.govpay.bd.model.Psp psp : catalogoPsp) {
 						log.info("Inserimento [codPsp: " + psp.getCodPsp() + "]");
-						GpThreadLocal.get().log("psp.aggiornamentoPspInseritoPSP", psp.getCodPsp(), psp.getRagioneSociale());
+						ctx.log("psp.aggiornamentoPspInseritoPSP", psp.getCodPsp(), psp.getRagioneSociale());
 						response.add(psp.getRagioneSociale() + " (" + psp.getCodPsp() + ")#Aggiunto al registro.");
 						pspBD.insertPsp(psp);
 					}
@@ -247,18 +251,19 @@ public class Psp extends BasicBD {
 					commit();
 					
 					log.info("Aggiornamento Registro PSP completato.");
-					GpThreadLocal.get().log("psp.aggiornamentoPspRichiestaOk");
+					ctx.log("psp.aggiornamentoPspRichiestaOk");
 					break;
 				} catch (Exception e) {
 					log.warn("Errore di acquisizione del Catalogo dati Informativi [codIntermediario: " + intermediario.getCodIntermediario() + "][codStazione: " + stazione.getCodStazione() + "][codDominio:" + dominio.getCodDominio() + "]: " + e);
-					GpThreadLocal.get().log("psp.aggiornamentoPspRichiestaKo", e.getMessage());
+					ctx.log("psp.aggiornamentoPspRichiestaKo", e.getMessage());
 					continue;
 				} finally {
-					GpThreadLocal.get().closeTransaction(transactionId);
+					ctx.closeTransaction(transactionId);
 				}
 			}
 
-			GpThreadLocal.get().log("psp.aggiornamentoPspOk");
+			
+			ctx.log("psp.aggiornamentoPspOk");
 			
 			if(response.isEmpty()) {
 				return "Acquisizione completata#Nessun psp acquisito.";
@@ -267,11 +272,11 @@ public class Psp extends BasicBD {
 			}
 		} catch (Exception se) {
 			rollback();
-			GpThreadLocal.get().log("psp.aggiornamentoPspKo", se.getMessage());
+			ctx.log("psp.aggiornamentoPspKo", se.getMessage());
 			throw new GovPayException(EsitoOperazione.INTERNAL, se, "Non è stato possibile acquisire il Catalogo dei Psp dal Nodo dei Pagamenti: " + se.getMessage());
 		} finally {
 			closeConnection();
-			GpThreadLocal.get().closeTransaction(transactionId);
+			ctx.closeTransaction(transactionId);
 		}
 	}
 	

@@ -72,7 +72,7 @@ public class PspRestController extends BasePapRsService {
 				psp.setInformativaMaster(informativaMaster);
 
 				List<InformativaDetail> listaInformativaDetail = new ArrayList<InformativaDetail>();
-				for(it.govpay.bd.model.Canale canaleModel : pspModel.getCanali()) {
+				for(it.govpay.bd.model.Canale canaleModel : pspModel.getCanalis()) {
 					InformativaDetail informativa = new InformativaDetail();
 					informativa.setCondizioniEconomicheMassime(canaleModel.getCondizioni());
 					informativa.setDescrizioneServizio(canaleModel.getDescrizione());

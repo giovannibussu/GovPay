@@ -1,7 +1,7 @@
 package it.agid.pap.util;
 
 import it.agid.pap.model.StatoPratica.StatoPraticaType;
-import it.govpay.bd.model.Rpt.StatoRpt;
+import it.govpay.model.Rpt.StatoRpt;
 
 public class GpWrapperUtils {
 	

@@ -28,7 +28,7 @@ import it.agid.pap.ws.clients.json.StatiPraticaRisposta;
 import it.agid.pap.ws.rest.BasePapRsService;
 import it.gov.digitpa.schemas._2011.ws.paa.FaultBean;
 import it.govpay.bd.BasicBD;
-import it.govpay.bd.model.Portale;
+import it.govpay.model.Portale;
 import it.govpay.bd.model.Rpt;
 import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GpContext;

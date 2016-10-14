@@ -5,8 +5,8 @@ import org.openspcoop2.generic_project.exception.ServiceException;
 
 import it.govpay.bd.BasicBD;
 import it.govpay.bd.anagrafica.AnagraficaManager;
-import it.govpay.bd.model.Applicazione;
-import it.govpay.bd.model.Portale;
+import it.govpay.model.Applicazione;
+import it.govpay.model.Portale;
 import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GovpayConfig;
 import it.govpay.servizi.commons.EsitoOperazione;
