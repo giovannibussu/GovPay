@@ -308,6 +308,8 @@ public class Versamento extends BasicModel {
 	}
 	
 	public static Causale decode(String encodedCausale) throws UnsupportedEncodingException {
+		if(encodedCausale == null) return null;
+		
 		String[] causaleSplit = encodedCausale.split(" ");
 		if(causaleSplit[0].equals("01")) {
 			CausaleSemplice causale = new Versamento().new CausaleSemplice();

@@ -74,8 +74,6 @@ import it.govpay.model.Rpt.FirmaRichiesta;
 import it.govpay.model.Rpt.StatoRpt;
 import it.govpay.servizi.commons.EsitoOperazione;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -83,8 +81,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-
-import javax.activation.DataHandler;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -507,19 +503,7 @@ public class RptUtils {
 	
 						rptBD = new RptBD(bd);
 						
-						byte[] rtByte = null;
-						try {
-							ByteArrayOutputStream output = new ByteArrayOutputStream();
-							DataHandler dh = nodoChiediCopiaRTRisposta.getRt();
-							dh.writeTo(output);
-							rtByte = output.toByteArray();
-						} catch (IOException e) {
-							log.error("Errore durante la lettura dell'RT: " + e);
-							rptBD.updateRpt(rpt.getId(), nuovoStato, null, null, null);
-							rpt.setStato(nuovoStato);
-							rpt.setDescrizioneStato(null);
-							throw new GovPayException(EsitoOperazione.INTERNAL, e);
-						}
+						byte[] rtByte = nodoChiediCopiaRTRisposta.getRt();
 	
 						if(nodoChiediCopiaRTRisposta.getFault() != null) {
 							log.info("Fault nell'acquisizione dell'RT: [" + risposta.getFault().getFaultCode() + "] " + risposta.getFault().getFaultString());

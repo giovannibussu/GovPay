@@ -40,6 +40,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.openspcoop2.generic_project.exception.NotFoundException;
 import org.openspcoop2.generic_project.exception.ServiceException;
 
@@ -52,7 +53,6 @@ import it.govpay.model.Portale;
 import it.govpay.servizi.commons.EsitoOperazione;
 import it.govpay.web.handler.MessageLoggingHandlerUtils;
 import net.sf.json.JSONObject;
-import net.sf.json.JsonConfig;
 
 @Path("/")
 public abstract class BaseRsService {
@@ -198,13 +198,11 @@ public abstract class BaseRsService {
 		return lista.isEmpty();
 	}
 	
+	private static ObjectMapper mapper = new ObjectMapper();
 	protected ByteArrayOutputStream toOutputStream(Object o) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try { 
-			JsonConfig jsonConfig = new JsonConfig();
-			jsonConfig.setRootClass(o.getClass());
-			JSONObject jsonObject = JSONObject.fromObject( o , jsonConfig);  
-			baos.write(jsonObject.toString().getBytes());
+			mapper.writeValue(baos, o);
 		} catch (Exception e) {
 			log.error("Errore nella serializzazione del messaggio di risposta",e);
 			try {baos.write("Errore nella serializzazione del messaggio di risposta".getBytes());} catch (Exception e2) {}

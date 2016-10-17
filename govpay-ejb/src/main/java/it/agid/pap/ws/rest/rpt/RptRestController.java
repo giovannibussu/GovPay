@@ -94,6 +94,8 @@ public class RptRestController extends BasePapRsService {
 			ctx.getContext().getRequest().addGenericProperty(new Property("codPsp", rpt.getIdentificativoPSP()));
 			ctx.getContext().getRequest().addGenericProperty(new Property("codCanale", rpt.getIdentificativoCanale()));
 			ctx.getContext().getRequest().addGenericProperty(new Property("tipoVersamento", rpt.getDatiVersamento().getTipoVersamento()));
+			ctx.getContext().getRequest().addGenericProperty(new Property("codSessionePortale", "--Non fornito--"));
+			
 			ctx.log("pap.inviaRpt");
 			
 			
@@ -187,6 +189,8 @@ public class RptRestController extends BasePapRsService {
 			Pagamento pagamento = new Pagamento(bd);
 			GpAvviaTransazionePagamentoResponse avviaTransazione = pagamento.avviaTransazione(portale, richiesta, canaleModel);
 
+			ctx.getContext().getRequest().addGenericProperty(new Property("ccp", avviaTransazione.getRifTransazione().get(0).getCcp()));
+			
 			NodoInviaRPTRisposta wsResponse = new NodoInviaRPTRisposta();
 			wsResponse.setEsito("OK");
 			

@@ -164,11 +164,11 @@ public class Iuv extends BasicBD {
 		}
 	}
 	
-	public it.govpay.model.Iuv caricaIUV(Applicazione applicazione, Dominio dominio, String iuvProposto, TipoIUV tipo, String codVersamentoEnte) throws GovPayException, ServiceException{
+	public it.govpay.bd.model.Iuv caricaIUV(Applicazione applicazione, Dominio dominio, String iuvProposto, TipoIUV tipo, String codVersamentoEnte) throws GovPayException, ServiceException{
 		if(tipo.equals(TipoIUV.NUMERICO) && !IuvUtils.checkIuvNumerico(iuvProposto, it.govpay.model.Iuv.AUX_DIGIT, dominio.getStazione(this).getApplicationCode())) {
 			throw new GovPayException(EsitoOperazione.VER_017, iuvProposto);
 		}
-		it.govpay.model.Iuv iuv = null;
+		it.govpay.bd.model.Iuv iuv = null;
 		IuvBD iuvBD = new IuvBD(this);
 		// Controllo se esiste gia'
 		try {
@@ -179,7 +179,7 @@ public class Iuv extends BasicBD {
 			}
 		} catch (NotFoundException ne) {
 			// Non esiste, lo carico 
-			iuv = new it.govpay.model.Iuv();
+			iuv = new it.govpay.bd.model.Iuv();
 			iuv.setIdDominio(dominio.getId());
 			iuv.setPrg(0);
 			iuv.setIuv(iuvProposto);
@@ -188,6 +188,7 @@ public class Iuv extends BasicBD {
 			iuv.setTipo(tipo);
 			iuv.setCodVersamentoEnte(codVersamentoEnte);
 			iuv.setApplicationCode(dominio.getStazione(this).getApplicationCode());
+			iuv.setNuovo(true);
 			iuvBD.insertIuv(iuv);
 			GpThreadLocal.get().log("iuv.caricamentoIUVOk", applicazione.getCodApplicazione(), iuv.getCodVersamentoEnte(), dominio.getCodDominio(), iuv.getIuv());
 		}

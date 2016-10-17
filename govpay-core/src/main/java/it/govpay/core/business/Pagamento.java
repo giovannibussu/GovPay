@@ -358,14 +358,14 @@ public class Pagamento extends BasicBD {
 				if(versamento.getId() == null) {
 					versamentiBusiness.caricaVersamento(versamento, false, aggiornaSeEsiste);
 				}
-				it.govpay.model.Iuv iuv = null;
+				it.govpay.bd.model.Iuv iuv = null;
 				String ccp = null;
 
 				// Verifico se ha uno IUV suggerito ed in caso lo assegno
 				if(versamento.getIuvProposto() != null) {
 					Iuv iuvBusiness = new Iuv(this);
 					iuv = iuvBusiness.caricaIUV(versamento.getApplicazione(this), versamento.getUo(this).getDominio(this), versamento.getIuvProposto(), TipoIUV.ISO11694, versamento.getCodVersamentoEnte());
-					ccp = IuvUtils.buildCCP();
+					ccp = iuv.isNuovo() ? it.govpay.bd.model.Rpt.CCP_NA : IuvUtils.buildCCP();
 					ctx.log("iuv.assegnazioneIUVCustom", versamento.getApplicazione(this).getCodApplicazione(), versamento.getCodVersamentoEnte(), versamento.getUo(this).getDominio(this).getCodDominio(), versamento.getIuvProposto(), ccp);
 				} else {
 

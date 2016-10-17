@@ -2,7 +2,6 @@ package it.agid.pap.ws.rest.rt;
 
 import java.io.InputStream;
 
-import javax.activation.DataHandler;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -16,8 +15,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-
-import com.sun.istack.ByteArrayDataSource;
 
 import it.agid.pap.util.FaultCodes;
 import it.agid.pap.util.GpWrapperUtils;
@@ -61,8 +58,11 @@ public class RtRestController extends BasePapRsService {
 
 			it.govpay.core.business.Pagamento pagamentoBusiness = new it.govpay.core.business.Pagamento(bd);
 			Rpt rpt = pagamentoBusiness.chiediTransazione(portale, codDominio, iuv, Rpt.CCP_NA);
-
-			wsResponse.setRt(new DataHandler(new ByteArrayDataSource(rpt.getXmlRt(), "text/xml")));
+			
+			if(rpt.getXmlRt() != null) {
+				wsResponse.setRt(rpt.getXmlRt());
+			}
+			
 			wsResponse.setTipoFirma(rpt.getFirmaRichiesta().getCodifica());
 			wsResponse.setStatoPratica(GpWrapperUtils.statoRpt2statoPratica(rpt.getStato()).toString());
 			ctx.log("pap.ricevutaRichiestaOk");
