@@ -35,7 +35,7 @@ import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
 import it.govpay.servizi.commons.EsitoOperazione;
 
-@Path("/pap/rts")
+@Path("/pap/{codDominio}/rts")
 public class RtRestController extends BasePapRsService {
 	
 	public RtRestController() {
