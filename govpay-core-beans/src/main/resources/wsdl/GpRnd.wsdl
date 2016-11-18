@@ -61,7 +61,11 @@
 							<xsd:element name="pagamento" maxOccurs="unbounded" minOccurs="0">
 								<xsd:complexType>
 									<xsd:sequence>
-										<xsd:element name="codApplicazione" type="com:cod35" />
+										<xsd:element name="codApplicazione" type="com:cod35" minOccurs="0">
+											<xsd:annotation>
+												<xsd:documentation>Presente dalla versione 2.2</xsd:documentation>
+											</xsd:annotation>
+										</xsd:element>
 										<xsd:element name="codSingoloVersamentoEnte" type="com:cod35" />
 										<xsd:element name="codDominio" type="com:cod35" minOccurs="0">
 											<xsd:annotation>
@@ -91,6 +95,11 @@
 					<xsd:element name="codVersamentoEnte" type="com:cod35" />
 					<xsd:element name="codDominio" type="com:cod35" />
 					<xsd:element name="iuv" type="com:cod35" />
+					<xsd:element name="numeroAvviso" type="com:cod35" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>Presente dalla versione 2.2.2</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
 					<xsd:element name="qrCode" type="xsd:base64Binary" />
 					<xsd:element name="barCode" type="xsd:base64Binary" />
 				</xsd:sequence>
@@ -161,7 +170,11 @@
 						<xsd:element name="codApplicazione" type="com:cod35" />
 						<xsd:choice>
 							<xsd:element name="codVersamentoEnte" type="com:cod35" />
-							<xsd:element name="bundlekey" type="com:string256" />
+							<xsd:sequence>
+								<xsd:element name="codDominio" type="com:cod35" minOccurs="0"/>
+								<xsd:element name="codUnivocoDebitore" type="com:string35" minOccurs="0"/>
+								<xsd:element name="bundlekey" type="com:string256" />
+							</xsd:sequence>
 						</xsd:choice>
 						<xsd:element name="iuv" type="com:cod35" minOccurs="0"/>
 					</xsd:sequence>
@@ -220,7 +233,13 @@
 											<xsd:sequence>
 												<xsd:element name="ibanAccredito" type="com:cod35"></xsd:element>
 												<xsd:element name="tipoContabilita" type="com:tipoContabilita"></xsd:element>
-												<xsd:element name="codContabilita" type="com:string140"></xsd:element>
+												<xsd:element name="codContabilita">
+													<xsd:simpleType>
+														<xsd:restriction base="xsd:string">
+															<xsd:pattern value="\S{3,138}"></xsd:pattern>
+														</xsd:restriction>
+													</xsd:simpleType>
+												</xsd:element>
 											</xsd:sequence>
 										</xsd:complexType>
 									</xsd:element>
@@ -248,8 +267,7 @@
 			
 			<xsd:simpleType name="string2">
 				<xsd:restriction base="xsd:string">
-					<xsd:minLength value="1" />
-					<xsd:maxLength value="2" />
+					<xsd:pattern value="[A-Z]{2,2}"></xsd:pattern>
 				</xsd:restriction>
 			</xsd:simpleType>
 			
@@ -309,6 +327,13 @@
 				</xsd:restriction>
 			</xsd:simpleType>
 			
+			<xsd:simpleType name="email">
+				<xsd:restriction base="xsd:string">
+		            <xsd:pattern value="[A-Za-z0-9_]+([\-\+\.'][A-Za-z0-9_]+)*@[A-Za-z0-9_]+([\-\.][A-Za-z0-9_]+)*\.[A-Za-z0-9_]+([\-\.][A-Za-z0-9_]+)*"/>
+		            <xsd:maxLength value="255"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			
 			<xsd:simpleType name="string512">
 				<xsd:restriction base="xsd:string">
 					<xsd:minLength value="1" />
@@ -318,25 +343,28 @@
 		
 			<xsd:simpleType name="importo10">
 				<xsd:restriction base="xsd:decimal">
-					<xsd:maxInclusive value="9999999"/>
-					<xsd:minExclusive value="0"/>
+					<xsd:minInclusive value="0.00" />
+					<xsd:maxInclusive value="9999999.99" />
 					<xsd:fractionDigits value="2" />
+					<xsd:totalDigits value="10" />
 				</xsd:restriction>
 			</xsd:simpleType>
-			
+
 			<xsd:simpleType name="importo">
 				<xsd:restriction base="xsd:decimal">
-					<xsd:maxInclusive value="999999999"/>
-					<xsd:minExclusive value="0"/>
-					<xsd:fractionDigits value="2" />
+				    <xsd:minInclusive value="0.00"/>
+					<xsd:maxInclusive value="99999999.99"/>
+					<xsd:fractionDigits value="2"/>
+					<xsd:totalDigits value="12"/>
 				</xsd:restriction>
 			</xsd:simpleType>
-			
+
 			<xsd:simpleType name="importo18">
 				<xsd:restriction base="xsd:decimal">
-					<xsd:maxInclusive value="999999999999999"/>
-					<xsd:minExclusive value="0"/>
+					<xsd:minInclusive value="0.00" />
+					<xsd:maxInclusive value="999999999999999.99" />
 					<xsd:fractionDigits value="2" />
+					<xsd:totalDigits value="18" />
 				</xsd:restriction>
 			</xsd:simpleType>
 			
@@ -480,13 +508,28 @@
 					<xsd:element name="localita" type="com:string35" minOccurs="0" />
 					<xsd:element name="provincia" type="com:string35" minOccurs="0" />
 					<xsd:element name="nazione" type="com:string2" minOccurs="0" />
-					<xsd:element name="email" type="com:string256" minOccurs="0" />
+					<xsd:element name="email" type="com:email" minOccurs="0" />
 					<xsd:element name="telefono" type="xsd:string" minOccurs="0" />
 					<xsd:element name="cellulare" type="xsd:string" minOccurs="0" />
 					<xsd:element name="fax" type="xsd:string" minOccurs="0" />
 				</xsd:sequence>
 			</xsd:complexType>
 			
+			<xsd:element name="metaInfo" nillable="true">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="iuvProp" maxOccurs="unbounded">
+							<xsd:complexType>
+								<xsd:simpleContent>
+									<xsd:extension base="xsd:string">
+										<xsd:attribute name="nome" type="xsd:string" />
+									</xsd:extension>
+								</xsd:simpleContent>
+							</xsd:complexType>
+						</xsd:element>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
 			
 			<xsd:simpleType name="esitoOperazione">
 				<xsd:restriction base="xsd:string">

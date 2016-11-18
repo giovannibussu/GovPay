@@ -49,6 +49,7 @@ import it.govpay.servizi.gpprt.GpChiediListaPspResponse;
 import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
+import it.govpay.core.utils.NdpUtils;
 import it.govpay.core.utils.PspUtils;
 import it.govpay.core.utils.client.NodoClient;
 import it.govpay.core.utils.client.NodoClient.Azione;
@@ -59,7 +60,7 @@ import it.govpay.model.Portale;
 import it.govpay.bd.model.Stazione;
 
 public class Psp extends BasicBD {
-	
+
 	private static Logger log = LogManager.getLogger();
 
 	public Psp(BasicBD basicBD) {
@@ -70,7 +71,7 @@ public class Psp extends BasicBD {
 
 		PspBD pspBD = new PspBD(this);
 		List<it.govpay.bd.model.Psp> psps = pspBD.getPsp(true);
-		
+
 		GpChiediListaPspResponse response = new GpChiediListaPspResponse();
 		for(it.govpay.bd.model.Psp pspModel : psps) {
 			GpChiediListaPspResponse.Psp psp = new GpChiediListaPspResponse.Psp();
@@ -96,31 +97,35 @@ public class Psp extends BasicBD {
 		}
 		return response;
 	}
-	
-	
+
+
 	public String aggiornaRegistro() throws GovPayException {
 		List<String> response = new ArrayList<String>();
-		
+
 		GpContext ctx = GpThreadLocal.get();
-		
+
 		log.info("Aggiornamento del Registro PSP");
 		ctx.log("psp.aggiornamentoPsp");
+		boolean acquisizioneOk = false;
+		String lastError = "[-- No exception found --]";
 		String transactionId = null;
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
-			
+
 			DominiBD dominiBD = new DominiBD(this);
 			List<Dominio> domini = dominiBD.getDomini();
-			
+
 			if(domini.size() == 0) {
 				log.warn("Nessun dominio registrato. Impossibile richiedere il catalogo dei Psp.");
 				ctx.log("psp.aggiornamentoPspNoDomini");
-				throw new GovPayException(EsitoOperazione.INTERNAL, "Nessun dominio registrato. Impossibile richiedere il catalogo dei Psp.");
+				throw new GovPayException("Nessun dominio registrato. Impossibile richiedere il catalogo dei Psp.", EsitoOperazione.INTERNAL, "Impossibile aggiornare la lista dei Psp.");
 			}
 			// Finche' non ricevo un catalogo di informativa, provo per tutti i domini.
 			ListaInformativePSP informativePsp = null;
-			
+
 			for(Dominio dominio : domini) {
+
+				log.info("Richiedo catalogo per il dominio " + dominio.getCodDominio());
 				Stazione stazione = dominio.getStazione(this);
 				Intermediario intermediario = stazione.getIntermediario(this);
 
@@ -129,9 +134,9 @@ public class Psp extends BasicBD {
 				ctx.getContext().getRequest().addGenericProperty(new Property("codStazione", stazione.getCodStazione()));
 				ctx.setupNodoClient(stazione.getCodStazione(), dominio.getCodDominio(), Azione.nodoChiediInformativaPSP);
 				ctx.log("psp.aggiornamentoPspRichiesta");
-				
+
 				closeConnection();
-				
+
 				NodoChiediInformativaPSP richiesta = new NodoChiediInformativaPSP();
 				richiesta.setIdentificativoDominio(dominio.getCodDominio());
 				richiesta.setIdentificativoIntermediarioPA(intermediario.getCodIntermediario());
@@ -139,32 +144,32 @@ public class Psp extends BasicBD {
 				richiesta.setPassword(stazione.getPassword());
 
 				try {
-					
+
 					try { 
 						NodoClient client = new NodoClient(intermediario);
-						
+
 						NodoChiediInformativaPSPRisposta risposta = client.nodoChiediInformativaPSP(richiesta, intermediario.getDenominazione());
-	
+
 						if(risposta.getFault() != null) {
-							throw new GovPayException(EsitoOperazione.NDP_001, risposta.getFault().getFaultCode() + ": " + risposta.getFault().getFaultString());
+							throw new GovPayException(NdpUtils.toCausaString(risposta.getFault()), EsitoOperazione.NDP_001, "Ricevuto errore dal Nodo dei Pagamenti durante l'acquisizione della Informativa Psp per il dominio " + dominio.getCodDominio());
 						}
-	
+
 						DataHandler dh= risposta.getXmlInformativa();
 						ByteArrayOutputStream output = new ByteArrayOutputStream();
 						dh.writeTo(output);
-	
+
 						Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 						informativePsp = (ListaInformativePSP) jaxbUnmarshaller.unmarshal(risposta.getXmlInformativa().getDataSource().getInputStream());
 					} finally {
 						setupConnection(ctx.getTransactionId());
 					}
-					
+
 					if(informativePsp == null) {
-						log.warn("Catalogo dei psp non acquisito. Impossibile aggiornare il registro.");
-						ctx.log("psp.aggiornamentoPspRichiestaKo", "Catalogo dei psp vuoto.");
-						throw new GovPayException(EsitoOperazione.INTERNAL, "Catalogo dei psp non acquisito. Impossibile aggiornare il registro.");
+						log.error("Catalogo dei psp non acquisito. Impossibile aggiornare il registro.");
+						ctx.log("psp.aggiornamentoPspRichiestaKo", "Ricevuta Informativa PSP vuota.");
+						throw new GovPayException("Ricevuta Informativa PSP vuota.", EsitoOperazione.INTERNAL, "Impossibile aggiornare la lista dei Psp.");
 					}
-					
+
 					log.info("Ricevuto catalogo dei dati Informativi con " + informativePsp.getInformativaPSPs().size() + " informative.");
 					List<it.govpay.bd.model.Psp> catalogoPsp = new ArrayList<it.govpay.bd.model.Psp>();
 
@@ -197,16 +202,17 @@ public class Psp extends BasicBD {
 							canale.setCodIntermediario(informativaPspDetail.getIdentificativoIntermediario());
 							psp.getCanalis().add(canale);
 						}
+
 						catalogoPsp.add(psp);
 						log.debug("Acquisita informativa [codPsp: " + psp.getCodPsp() + "]");
 					}
 
 					// Completata acquisizione del Catalogo dal Nodo dei Pagamenti.
-					
+
 					// Disabilito tutti i PSP e li aggiorno o inserisco in base
 					// a quello che ho trovato sul catalogo.
 					setAutoCommit(false);
-					
+
 					PspBD pspBD = new PspBD(this);
 					List<it.govpay.bd.model.Psp> oldPsps = pspBD.getPsp();
 					while(!oldPsps.isEmpty()) {
@@ -215,7 +221,7 @@ public class Psp extends BasicBD {
 						boolean trovato = false;
 						for(int i = 0; i<catalogoPsp.size(); i++ ) {
 							if(catalogoPsp.get(i).getCodPsp().equals(psp.getCodPsp())) {
-								
+
 								// Il psp e' nel catalogo, va aggiornato. 
 								// Rimuovo la versione aggiornata dal catalogo e lo mando in update
 								log.info("Aggiornamento [codPsp: " + psp.getCodPsp() + "]");
@@ -239,7 +245,7 @@ public class Psp extends BasicBD {
 							}
 						}
 					}
-					
+
 					// I psp rimasti nel catalogo, sono nuovi e vanno aggiunti
 					for(it.govpay.bd.model.Psp psp : catalogoPsp) {
 						log.info("Inserimento [codPsp: " + psp.getCodPsp() + "]");
@@ -249,35 +255,40 @@ public class Psp extends BasicBD {
 					}
 
 					commit();
-					
+
 					log.info("Aggiornamento Registro PSP completato.");
 					ctx.log("psp.aggiornamentoPspRichiestaOk");
+					acquisizioneOk = true;
 					break;
 				} catch (Exception e) {
-					log.warn("Errore di acquisizione del Catalogo dati Informativi [codIntermediario: " + intermediario.getCodIntermediario() + "][codStazione: " + stazione.getCodStazione() + "][codDominio:" + dominio.getCodDominio() + "]: " + e);
+					log.error("Errore di acquisizione del Catalogo dati Informativi [codIntermediario: " + intermediario.getCodIntermediario() + "][codStazione: " + stazione.getCodStazione() + "][codDominio:" + dominio.getCodDominio() + "]", e);
 					ctx.log("psp.aggiornamentoPspRichiestaKo", e.getMessage());
+					lastError = e.getMessage();
 					continue;
 				} finally {
 					ctx.closeTransaction(transactionId);
 				}
 			}
 
-			
-			ctx.log("psp.aggiornamentoPspOk");
-			
-			if(response.isEmpty()) {
-				return "Acquisizione completata#Nessun psp acquisito.";
+			if(acquisizioneOk) {
+				ctx.log("psp.aggiornamentoPspOk");
+				if(response.isEmpty()) {
+					return "Acquisizione completata#Nessun psp acquisito.";
+				} else {
+					return StringUtils.join(response,"|");
+				}
 			} else {
-				return StringUtils.join(response,"|");
+				ctx.log("psp.aggiornamentoPspKo", lastError);
+				return "Acquisizione fallita#Riscontrato errore:" + lastError;
 			}
-		} catch (Exception se) {
+		} catch (Throwable se) {
 			rollback();
 			ctx.log("psp.aggiornamentoPspKo", se.getMessage());
-			throw new GovPayException(EsitoOperazione.INTERNAL, se, "Non è stato possibile acquisire il Catalogo dei Psp dal Nodo dei Pagamenti: " + se.getMessage());
+			throw new GovPayException(se, "Impossibile aggiornare la lista dei Psp.");
 		} finally {
 			closeConnection();
 			ctx.closeTransaction(transactionId);
 		}
 	}
-	
+
 }

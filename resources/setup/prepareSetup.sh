@@ -1,4 +1,4 @@
-VERSION=2.2.1.pap
+VERSION=2.3.pap
 
 # Directory
 COPYING_FILE=../../COPYING

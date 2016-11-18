@@ -76,7 +76,7 @@ public class NodoRptRestController extends BasePapRsService {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(fault).build();
 		} catch (Exception e) {
 			new GovPayException(e).log(log);
-			ctx.log("gpapp.ricevutaRichiestaKo", EsitoOperazione.INTERNAL.toString(), e.getMessage());
+			ctx.log("pap.ricevutaRichiestaKo", EsitoOperazione.INTERNAL.toString(), e.getMessage());
 			FaultBean fault = new FaultBean();
 			fault.setFaultCode(FaultCodes.PAP_UNEXPECTED_ERROR.name());
 			fault.setFaultString(e.getMessage());

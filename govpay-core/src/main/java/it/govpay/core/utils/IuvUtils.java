@@ -34,8 +34,11 @@ import org.xml.sax.SAXException;
 
 import it.gov.spcoop.avvisopagamentopa.informazioniversamentoqr.CtNumeroAvviso;
 import it.gov.spcoop.avvisopagamentopa.informazioniversamentoqr.InformazioniVersamento;
+import it.govpay.bd.model.Rpt;
 import it.govpay.model.Applicazione;
 import it.govpay.model.Dominio;
+import it.govpay.model.Iuv.TipoIUV;
+import it.govpay.model.Versionabile.Versione;
 import it.govpay.servizi.commons.IuvGenerato;
 
 public class IuvUtils {
@@ -70,12 +73,15 @@ public class IuvUtils {
 		return payToLoc + gln + refNo + "0" + String.format("%02d", applicationCode) + iuv + amount + importo;
 	}
 	
-	public static IuvGenerato toIuvGenerato(Applicazione applicazione, Dominio dominio, it.govpay.model.Iuv iuv, BigDecimal importoTotale) throws ServiceException {
+	public static IuvGenerato toIuvGenerato(Applicazione applicazione, Dominio dominio, it.govpay.model.Iuv iuv, BigDecimal importoTotale, Versione versione) throws ServiceException {
 		IuvGenerato iuvGenerato = new IuvGenerato();
 		iuvGenerato.setCodApplicazione(applicazione.getCodApplicazione());
 		iuvGenerato.setCodDominio(dominio.getCodDominio());
 		iuvGenerato.setCodVersamentoEnte(iuv.getCodVersamentoEnte());
 		iuvGenerato.setIuv(iuv.getIuv());
+		if(versione.compareTo(Versione.GP_02_02_02) >= 0) {
+			iuvGenerato.setNumeroAvviso(iuv.getAuxDigit() + String.format("%02d", iuv.getApplicationCode()) + iuv.getIuv());
+		}
 		iuvGenerato.setBarCode(buildBarCode(dominio.getGln(), iuv.getApplicationCode(), iuv.getIuv(), importoTotale).getBytes());
 		try {
 		switch (GovpayConfig.getInstance().getVersioneAvviso()) {
@@ -95,15 +101,19 @@ public class IuvUtils {
 	
 	private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("ddMMyyyyHHmmSSsss");
 	
-	public static String buildCCP(){
-		 Date today = new Date();
-		 return DATE_FORMAT.format(today);
+	public static String buildCCP(TipoIUV tipoIuv){
+		if(tipoIuv.equals(TipoIUV.NUMERICO)) {
+			Date today = new Date();
+			return DATE_FORMAT.format(today);
+		} else {
+			return Rpt.CCP_NA;
+		}
 	}
 
 	public static boolean checkIuvNumerico(String iuv, int auxDigit, int applicationCode) {
 		if(iuv.length() != 15) return false;
 		String reference = iuv.substring(0, 13);
-		long resto93 = (Long.parseLong(String.valueOf(it.govpay.model.Iuv.AUX_DIGIT) + String.format("%02d", applicationCode) + reference)) % 93;
+		long resto93 = (Long.parseLong(String.valueOf(auxDigit) + String.format("%02d", applicationCode) + reference)) % 93;
 		return iuv.equals(reference + String.format("%02d", resto93));
 	}
 }

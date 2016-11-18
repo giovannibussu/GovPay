@@ -1,5 +1,6 @@
 package it.govpay.web.rs.utils;
 
+import it.govpay.web.rs.BaseRsService;
 import it.govpay.web.rs.model.Versamento;
 import it.govpay.web.rs.model.VersamentoResponse;
 
@@ -12,7 +13,6 @@ import javax.ws.rs.WebApplicationException;
 import net.sf.json.JSONObject;
 import net.sf.json.JsonConfig;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.logging.log4j.Logger;
 
@@ -27,7 +27,7 @@ public class VersamentoUtils {
 
 			JsonConfig jsonConfig = new JsonConfig();
 		
-			IOUtils.copy(is, baos);
+			BaseRsService.copy(is, baos);
 
 			baos.flush();
 
@@ -68,7 +68,7 @@ public class VersamentoUtils {
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(jsonObject.toString().getBytes());
 
-			IOUtils.copy(bais, baos);
+			BaseRsService.copy(bais, baos);
 
 			baos.flush();
 

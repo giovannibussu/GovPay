@@ -7,17 +7,16 @@ import java.io.IOException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 
 import it.govpay.bd.BasicBD;
 import it.govpay.core.exceptions.GovPayException;
-import it.govpay.web.rs.Caricatore;
+import it.govpay.web.rs.BaseRsService;
 import net.sf.json.JSONObject;
 
 public class RestUtils {
 
-	public static ByteArrayOutputStream writeGovpayErrorResponse(Caricatore c, Logger log, GovPayException response, UriInfo uriInfo, HttpHeaders httpHeaders,BasicBD bd,String methodName){
+	public static ByteArrayOutputStream writeGovpayErrorResponse(BaseRsService servizioRest, Logger log, GovPayException response, UriInfo uriInfo, HttpHeaders httpHeaders,BasicBD bd,String methodName){
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		String nomeMetodo = "writeEstrattoContoResponse";
 
@@ -30,11 +29,11 @@ public class RestUtils {
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(jsonObject.toString().getBytes());
 
-			IOUtils.copy(bais, baos);
+			BaseRsService.copy(bais, baos);
 
 			baos.flush();
 
-			c.logResponse(uriInfo, httpHeaders, methodName, baos);
+			servizioRest.logResponse(uriInfo, httpHeaders, methodName, baos);
 			
 			log.info("Esecuzione " + nomeMetodo + " completata.");
 
@@ -51,7 +50,7 @@ public class RestUtils {
 		return baos;
 	}
 	
-	public static ByteArrayOutputStream writeGovpayErrorResponse(Caricatore c, Logger log, Exception response, UriInfo uriInfo, HttpHeaders httpHeaders,BasicBD bd,String methodName){
+	public static ByteArrayOutputStream writeGovpayErrorResponse(BaseRsService servizioRest, Logger log, Exception response, UriInfo uriInfo, HttpHeaders httpHeaders,BasicBD bd,String methodName){
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		String nomeMetodo = "writeEstrattoContoResponse";
 
@@ -64,11 +63,11 @@ public class RestUtils {
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(jsonObject.toString().getBytes());
 
-			IOUtils.copy(bais, baos);
+			BaseRsService.copy(bais, baos);
 
 			baos.flush();
 
-			c.logResponse(uriInfo, httpHeaders, methodName, baos);
+			servizioRest.logResponse(uriInfo, httpHeaders, methodName, baos);
 			
 			log.info("Esecuzione " + nomeMetodo + " completata.");
 

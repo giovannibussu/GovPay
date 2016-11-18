@@ -7,7 +7,6 @@ import it.govpay.model.Applicazione;
 import it.govpay.bd.model.Dominio;
 import it.govpay.model.Iuv;
 import it.govpay.bd.pagamento.IuvBD;
-import it.govpay.bd.pagamento.IuvBD.Algoritmo;
 import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
@@ -16,6 +15,7 @@ import it.agid.pap.util.FaultCodes;
 import it.agid.pap.ws.rest.BasePapRsService;
 
 import java.io.InputStream;
+import java.util.Calendar;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.lang.StringUtils;
 import org.openspcoop2.utils.logger.beans.Property;
 import org.openspcoop2.utils.logger.constants.proxy.Result;
 
@@ -54,14 +55,14 @@ public class IuvRestController extends BasePapRsService {
 			ctx.log("pap.ricevutaRichiesta");
 			IuvBD iuvBD = new IuvBD(bd);
 			Dominio dominio = AnagraficaManager.getDominio(bd, codDominio);
-			Iuv iuv = iuvBD.generaIuv(applicazioneAutenticata, dominio, null, it.govpay.model.Iuv.AUX_DIGIT, dominio.getStazione(bd).getApplicationCode(), it.govpay.model.Iuv.TipoIUV.ISO11694, Algoritmo.PAP, false);
+			Iuv iuv = iuvBD.generaIuv(applicazioneAutenticata, dominio, null, it.govpay.model.Iuv.TipoIUV.ISO11694, retriveActualJulianDate());
 			
 			ctx.getContext().getRequest().addGenericProperty(new Property("codDominio", codDominio));
 			ctx.getContext().getRequest().addGenericProperty(new Property("iuv", iuv.getIuv()));
 			ctx.log("pap.generaIuvOk");
 			
 			ctx.log("pap.ricevutaRichiestaOk");
-			ctx.setResult(Result.SUCCESS);
+			ctx.getContext().getTransaction().setResult(Result.SUCCESS);
 			Object entity = "{\"iuv\" : \"" + iuv.getIuv() + "\"}";
 			logResponse(uriInfo, httpHeaders,"papRestGeneraIUV", toOutputStream(entity));
 			return Response.status(Status.CREATED).entity("{\"iuv\" : \"" + iuv.getIuv() + "\"}").build();
@@ -87,6 +88,22 @@ public class IuvRestController extends BasePapRsService {
 			}
 			if(bd != null) bd.closeConnection();
 		}
+	}
+	
+	private static final char FILL_CHARACTER = '0';
+	private static final int JULIAN_DATE_LENGTH = 3;
+	
+	private String retriveActualJulianDate() {
+		StringBuilder sb = new StringBuilder();
+		Calendar now = Calendar.getInstance();
+		int year = now.get(Calendar.YEAR);
+		String anno = String.valueOf(year);
+		String an = anno.substring(1);
+		int day = now.get(Calendar.DAY_OF_YEAR);
+		return sb
+				.append(an)
+				.append(StringUtils.leftPad(String.valueOf(day),
+						JULIAN_DATE_LENGTH, FILL_CHARACTER)).toString();
 	}
 	
 }

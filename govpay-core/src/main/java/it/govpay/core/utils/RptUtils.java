@@ -20,6 +20,20 @@
  */
 package it.govpay.core.utils;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.openspcoop2.generic_project.exception.NotFoundException;
+import org.openspcoop2.generic_project.exception.ServiceException;
+import org.openspcoop2.utils.logger.beans.Property;
+
 import it.gov.digitpa.schemas._2011.pagamenti.CtDatiMarcaBolloDigitale;
 import it.gov.digitpa.schemas._2011.pagamenti.CtDatiSingoloVersamentoRPT;
 import it.gov.digitpa.schemas._2011.pagamenti.CtDatiVersamentoRPT;
@@ -43,6 +57,14 @@ import it.gov.digitpa.schemas._2011.ws.paa.NodoInviaRPT;
 import it.gov.digitpa.schemas._2011.ws.paa.TipoElementoListaRPT;
 import it.gov.digitpa.schemas._2011.ws.paa.TipoListaRPT;
 import it.govpay.bd.BasicBD;
+import it.govpay.bd.model.Canale;
+import it.govpay.bd.model.Dominio;
+import it.govpay.bd.model.Psp;
+import it.govpay.bd.model.Rpt;
+import it.govpay.bd.model.SingoloVersamento;
+import it.govpay.bd.model.Stazione;
+import it.govpay.bd.model.UnitaOperativa;
+import it.govpay.bd.model.Versamento;
 import it.govpay.bd.pagamento.RptBD;
 import it.govpay.bd.pagamento.util.IuvUtils;
 import it.govpay.core.business.GiornaleEventi;
@@ -50,43 +72,21 @@ import it.govpay.core.business.model.Risposta;
 import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.exceptions.NdpException;
 import it.govpay.core.utils.client.BasicClient.ClientException;
-import it.govpay.core.utils.client.NodoClient.Azione;
 import it.govpay.core.utils.client.NodoClient;
+import it.govpay.core.utils.client.NodoClient.Azione;
 import it.govpay.core.utils.thread.InviaRptThread;
 import it.govpay.core.utils.thread.ThreadExecutorManager;
 import it.govpay.model.Anagrafica;
-import it.govpay.bd.model.Canale;
-import it.govpay.bd.model.Dominio;
 import it.govpay.model.Evento;
+import it.govpay.model.Evento.CategoriaEvento;
+import it.govpay.model.Evento.TipoEvento;
 import it.govpay.model.IbanAccredito;
 import it.govpay.model.Intermediario;
 import it.govpay.model.Iuv;
 import it.govpay.model.Portale;
-import it.govpay.bd.model.Psp;
-import it.govpay.bd.model.Rpt;
-import it.govpay.bd.model.SingoloVersamento;
-import it.govpay.bd.model.Stazione;
-import it.govpay.bd.model.UnitaOperativa;
-import it.govpay.bd.model.Versamento;
-import it.govpay.model.Evento.CategoriaEvento;
-import it.govpay.model.Evento.TipoEvento;
 import it.govpay.model.Rpt.FirmaRichiesta;
 import it.govpay.model.Rpt.StatoRpt;
 import it.govpay.servizi.commons.EsitoOperazione;
-
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.openspcoop2.generic_project.exception.NotFoundException;
-import org.openspcoop2.generic_project.exception.ServiceException;
-import org.openspcoop2.utils.logger.beans.Property;
 
 public class RptUtils {
 

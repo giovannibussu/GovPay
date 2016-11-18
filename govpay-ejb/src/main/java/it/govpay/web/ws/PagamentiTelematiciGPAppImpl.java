@@ -41,6 +41,7 @@ import it.govpay.servizi.commons.EsitoOperazione;
 import it.govpay.servizi.commons.FlussoRendicontazione;
 import it.govpay.servizi.commons.GpResponse;
 import it.govpay.servizi.commons.IuvGenerato;
+import it.govpay.servizi.commons.MetaInfo;
 import it.govpay.servizi.commons.StatoVersamento;
 import it.govpay.servizi.gpapp.GpAnnullaVersamento;
 import it.govpay.servizi.gpapp.GpCaricaIuv;
@@ -87,10 +88,11 @@ public class PagamentiTelematiciGPAppImpl implements PagamentiTelematiciGPApp {
 	private static Logger log = LogManager.getLogger();
 
 	@Override
-	public GpGeneraIuvResponse gpGeneraIuv(GpGeneraIuv bodyrichiesta) {
+	public GpGeneraIuvResponse gpGeneraIuv(GpGeneraIuv bodyrichiesta, MetaInfo metaInfo) {
 		log.info("Richiesta operazione gpGeneraIuv di " + bodyrichiesta.getIuvRichiesto().size() + " Iuv per (" + bodyrichiesta.getCodApplicazione() + ")");
 		GpGeneraIuvResponse response = new GpGeneraIuvResponse();
 		GpContext ctx = GpThreadLocal.get();
+		Utils.loadMetaInfo(ctx, metaInfo);
 		BasicBD bd = null;
 		try {
 			bd = BasicBD.newInstance(GpThreadLocal.get().getTransactionId());
@@ -98,7 +100,7 @@ public class PagamentiTelematiciGPAppImpl implements PagamentiTelematiciGPApp {
 			ctx.log("ws.ricevutaRichiesta");
 			verificaApplicazione(applicazioneAutenticata, bodyrichiesta.getCodApplicazione());
 			it.govpay.core.business.Iuv iuvBusiness = new it.govpay.core.business.Iuv(bd);
-			response = iuvBusiness.generaIUV(applicazioneAutenticata, bodyrichiesta);
+			response = iuvBusiness.generaIUV(applicazioneAutenticata, bodyrichiesta, applicazioneAutenticata.getVersione());
 			response.setCodEsitoOperazione(EsitoOperazione.OK);
 			ctx.log("ws.ricevutaRichiestaOk");
 		} catch (GovPayException e) {
@@ -134,7 +136,7 @@ public class PagamentiTelematiciGPAppImpl implements PagamentiTelematiciGPApp {
 			ctx.log("ws.ricevutaRichiesta");
 			verificaApplicazione(applicazioneAutenticata, bodyrichiesta.getCodApplicazione());
 			it.govpay.core.business.Iuv iuvBusiness = new it.govpay.core.business.Iuv(bd);
-			response = iuvBusiness.caricaIUV(applicazioneAutenticata, bodyrichiesta);
+			response = iuvBusiness.caricaIUV(applicazioneAutenticata, bodyrichiesta, applicazioneAutenticata.getVersione());
 			response.setCodEsitoOperazione(EsitoOperazione.OK);
 			ctx.log("ws.ricevutaRichiestaOk");
 		} catch (GovPayException e) {
@@ -159,10 +161,11 @@ public class PagamentiTelematiciGPAppImpl implements PagamentiTelematiciGPApp {
 	}
 
 	@Override
-	public GpCaricaVersamentoResponse gpCaricaVersamento(GpCaricaVersamento bodyrichiesta) {
+	public GpCaricaVersamentoResponse gpCaricaVersamento(GpCaricaVersamento bodyrichiesta, MetaInfo metaInfo) {
 		log.info("Richiesta operazione gpCaricaVersamento per il versamento (" + bodyrichiesta.getVersamento().getCodVersamentoEnte() + ") dell'applicazione (" +  bodyrichiesta.getVersamento().getCodApplicazione()+") con generazione IUV (" + bodyrichiesta.isGeneraIuv() + ")");
 		GpCaricaVersamentoResponse response = new GpCaricaVersamentoResponse();
 		GpContext ctx = GpThreadLocal.get();
+		Utils.loadMetaInfo(ctx, metaInfo);
 		BasicBD bd = null;
 		try {
 			bd = BasicBD.newInstance(GpThreadLocal.get().getTransactionId());
@@ -185,7 +188,7 @@ public class PagamentiTelematiciGPAppImpl implements PagamentiTelematiciGPApp {
 			it.govpay.model.Iuv iuv = versamentoBusiness.caricaVersamento(applicazioneAutenticata, versamentoModel, bodyrichiesta.isGeneraIuv(), aggiornaSeEsiste);
 
 			if(iuv != null) {
-				IuvGenerato iuvGenerato = IuvUtils.toIuvGenerato(versamentoModel.getApplicazione(bd), versamentoModel.getUo(bd).getDominio(bd), iuv, versamento.getImportoTotale());
+				IuvGenerato iuvGenerato = IuvUtils.toIuvGenerato(versamentoModel.getApplicazione(bd), versamentoModel.getUo(bd).getDominio(bd), iuv, versamento.getImportoTotale(), applicazioneAutenticata.getVersione());
 				response.setIuvGenerato(iuvGenerato);
 				ctx.getContext().getResponse().addGenericProperty(new Property("codDominio", iuvGenerato.getCodDominio()));
 				ctx.getContext().getResponse().addGenericProperty(new Property("iuv", iuvGenerato.getIuv()));
@@ -308,7 +311,7 @@ public class PagamentiTelematiciGPAppImpl implements PagamentiTelematiciGPApp {
 			ctx.log("ws.ricevutaRichiesta");
 			verificaApplicazione(applicazioneAutenticata, bodyrichiesta.getCodApplicazione());
 			it.govpay.core.business.Versamento versamentoBusiness = new it.govpay.core.business.Versamento(bd);
-			Versamento versamento = versamentoBusiness.chiediVersamento(bodyrichiesta.getCodApplicazione(), bodyrichiesta.getCodVersamentoEnte());
+			Versamento versamento = versamentoBusiness.chiediVersamento(bodyrichiesta.getCodApplicazione(), bodyrichiesta.getCodVersamentoEnte(), null, null, null, null);
 			response.setCodApplicazione(versamento.getApplicazione(bd).getCodApplicazione());
 			response.setCodEsitoOperazione(EsitoOperazione.OK);
 			response.setCodVersamentoEnte(versamento.getCodVersamentoEnte());

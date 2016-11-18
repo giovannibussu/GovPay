@@ -53,8 +53,17 @@ public class TributoConverter {
 		dto.setIdTipoTributo(vo.getTipoTributo().getId()); 
 		if(vo.getIdIbanAccredito() != null)
 			dto.setIdIbanAccredito(vo.getIdIbanAccredito().getId());
-		dto.setTipoContabilita(TipoContabilta.toEnum(vo.getTipoContabilita()));
-		dto.setCodContabilita(vo.getCodiceContabilita());
+		
+		if(vo.getTipoContabilita() != null)
+			dto.setTipoContabilitaCustom(TipoContabilta.toEnum(vo.getTipoContabilita()));
+		dto.setCodContabilitaCustom(vo.getCodiceContabilita());
+		dto.setCodTributoIuvCustom(vo.getCodTributoIuv());
+		
+		if(vo.getTipoTributo().getTipoContabilita() != null) 
+			dto.setTipoContabilitaDefault(TipoContabilta.toEnum(vo.getTipoTributo().getTipoContabilita()));
+		dto.setCodContabilitaDefault(vo.getTipoTributo().getCodContabilita());
+		dto.setCodTributoIuvDefault(vo.getTipoTributo().getCodTributoIuv());
+		
 		return dto;
 	}
 
@@ -62,13 +71,23 @@ public class TributoConverter {
 		it.govpay.orm.Tributo vo = new it.govpay.orm.Tributo();
 		vo.setId(dto.getId());
 		vo.setAbilitato(dto.isAbilitato());
-		vo.setTipoContabilita(dto.getTipoContabilita().getCodifica());
-		vo.setCodiceContabilita(dto.getCodContabilita());
+		
 		
 		TipoTributo tipoTributo = new TipoTributo();
 		tipoTributo.setId(dto.getIdTipoTributo());
 		tipoTributo.setCodTributo(dto.getCodTributo());
 		tipoTributo.setDescrizione(dto.getDescrizione());
+		
+		if(dto.getTipoContabilitaCustom() != null)
+			vo.setTipoContabilita(dto.getTipoContabilitaCustom().getCodifica());
+		vo.setCodiceContabilita(dto.getCodContabilitaCustom());
+		vo.setCodTributoIuv(dto.getCodTributoIuvCustom());
+		
+		if(dto.getTipoContabilitaDefault() != null)
+			tipoTributo.setTipoContabilita(dto.getTipoContabilitaDefault().getCodifica());
+		tipoTributo.setCodContabilita(dto.getCodContabilitaDefault());
+		tipoTributo.setCodTributoIuv(dto.getCodTributoIuvDefault());
+		
 		vo.setTipoTributo(tipoTributo);
 
 		IdDominio idDominio = new IdDominio();

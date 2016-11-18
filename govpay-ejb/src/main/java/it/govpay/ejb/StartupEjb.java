@@ -65,7 +65,8 @@ public class StartupEjb {
 		GovpayConfig gpConfig = null;
 		try {
 			gpConfig = GovpayConfig.newInstance();
-			it.govpay.bd.GovpayConfig.newInstance();
+			it.govpay.bd.GovpayConfig.newInstance("/govpay.properties");
+			it.govpay.bd.GovpayCustomConfig.newInstance();
 		} catch (Exception e) {
 			throw new RuntimeException("Inizializzazione di GovPay fallita: " + e, e);
 		}
@@ -77,10 +78,10 @@ public class StartupEjb {
 			context.setConfigLocation(log4j2Config);
 			log = LogManager.getLogger("boot");	
 			
-			log.info("Inizializzazione GovPay v2.2.1 in corso. ($Id$)");
+			log.info("Inizializzazione GovPay v2.3.pap in corso. ($Id$)");
 			log.info("Caricata configurazione logger: " + gpConfig.getLog4j2Config().getPath());
 		} else {
-			log.info("Inizializzazione GovPay v2.2.1 in corso. ($Id$)");
+			log.info("Inizializzazione GovPay v2.3.pap in corso. ($Id$)");
 			log.info("Configurazione logger da classpath.");
 		}
 		
@@ -172,7 +173,7 @@ public class StartupEjb {
 
 		ctx.log();
 
-		log.info("Inizializzazione GovPay v2.2.1 completata con successo.  ($Id$)");
+		log.info("Inizializzazione GovPay v2.3.pap completata con successo.  ($Id$)");
 	}
 
 	@PreDestroy

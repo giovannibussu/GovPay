@@ -43,7 +43,8 @@ public class IntermediarioConverter {
 		dto.setId(vo.getId());
 		dto.setAbilitato(vo.isAbilitato());
 		dto.setDenominazione(vo.getDenominazione());
-		return dto;
+		dto.setSegregationCode(vo.getSegregationCode());
+		return dto; 
 	}
 
 	public static it.govpay.orm.Intermediario toVO(Intermediario dto) {
@@ -52,8 +53,12 @@ public class IntermediarioConverter {
 		vo.setId(dto.getId());
 		vo.setAbilitato(dto.isAbilitato());
 		vo.setDenominazione(dto.getDenominazione());
-		dto.getConnettorePdd().setIdConnettore(dto.getCodIntermediario());
 		vo.setCodConnettorePdd(dto.getCodIntermediario());
+		
+		if(dto.getConnettorePdd()!= null) {
+			dto.getConnettorePdd().setIdConnettore(dto.getCodIntermediario());
+		}
+		vo.setSegregationCode(dto.getSegregationCode());
 		return vo;
 	}
 

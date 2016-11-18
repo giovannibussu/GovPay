@@ -23,29 +23,23 @@ package it.govpay.bd;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openspcoop2.generic_project.exception.ServiceException;
 
 import it.govpay.bd.pagamento.util.CustomIuv;
 
-
 public class GovpayConfig {
-	
-	private static final String PROPERTIES_FILE = "/govpay-orm.properties";
 
 	private static GovpayConfig instance;
-	
+
 	public static GovpayConfig getInstance() {
 		return instance;
 	}
 
-	public static GovpayConfig newInstance() throws Exception {
-		instance = new GovpayConfig();
+	public static GovpayConfig newInstance(String propertyFileName) throws Exception {
+		instance = new GovpayConfig(propertyFileName);
 		return instance;
 	}
 
@@ -53,30 +47,27 @@ public class GovpayConfig {
 	private boolean databaseShowSql;
 	private String dataSourceJNDIName;
 	private String dataSourceAppName;
-	private Map<String, String> nativeQueries;
-	private CustomIuv defaultCustomIuvGenerator = null;
 	private Properties[] props;
 	private String resourceDir;
-	
-	
-	
-	public GovpayConfig() throws Exception {
-		
+	private CustomIuv defaultCustomIuvGenerator;
+
+	public GovpayConfig(String propertyFileName) throws Exception {
+
 		Logger log = LogManager.getLogger("boot");
-		
+
 		// Recupero il property all'interno dell'EAR
-		InputStream is = GovpayConfig.class.getResourceAsStream(PROPERTIES_FILE);
+		InputStream is = GovpayConfig.class.getResourceAsStream(propertyFileName);
 
 		props = new Properties[2];
 		Properties props1 = new Properties();
 		props1.load(is);
 		props[1] = props1;
-		
+
 		// Recupero la configurazione della working dir
 		// Se e' configurata, la uso come prioritaria
 
 		try {
-			this.resourceDir = getProperty("it.govpay.resource.path", props1, false);
+			this.resourceDir = getProperty("it.govpay.resource.path", props1, false, true);
 
 			if(this.resourceDir != null) {
 				File resourceDirFile = new File(this.resourceDir);
@@ -86,63 +77,55 @@ public class GovpayConfig {
 		} catch (Exception e) {
 			LogManager.getLogger("boot").warn("Errore di inizializzazione: " + e.getMessage() + ". Property ignorata.");
 		}
-		
+
 		Properties props0 = null;
 		props[0] = props0;
 
-		File gpConfigFile = new File(this.resourceDir + File.separatorChar + "govpay-orm.properties");
+		File gpConfigFile = new File(this.resourceDir + propertyFileName);
 		if(gpConfigFile.exists()) {
 			props0 = new Properties();
 			props0.load(new FileInputStream(gpConfigFile));
 			log.info("Individuata configurazione prioritaria: " + gpConfigFile.getAbsolutePath());
 			props[0] = props0;
 		}
-		
+
 		this.databaseType = getProperty("it.govpay.orm.databaseType", props, true);
 		String databaseShowSqlString = getProperty("it.govpay.orm.showSql", props, true);
 		this.databaseShowSql = Boolean.parseBoolean(databaseShowSqlString);
 		this.dataSourceJNDIName = getProperty("it.govpay.orm.dataSourceJNDIName", props, true);
 		this.dataSourceAppName = getProperty("it.govpay.orm.dataSourceAppName", props, true);
 
-		String nativeQueriesList = getProperty("it.govpay.orm.nativeQuery.list", props, false);
-
-		this.nativeQueries = new HashMap<String,String>();
-
-		if(nativeQueriesList != null && !nativeQueriesList.isEmpty()) {
-			String[] nativeQueriesSplit = nativeQueriesList.split(",");
-			for(String nativeQueryProp: nativeQueriesSplit) {
-				String nativeQuery = getProperty("it.govpay.orm.nativeQuery." +nativeQueryProp +"." +this.databaseType, props, false); //INIT solo le native queries per il tipo database correntemente usato
-				if(nativeQuery != null && !nativeQuery.isEmpty()) {
-					this.nativeQueries.put(nativeQueryProp, nativeQuery);
-				}
-			}
-		}
-		
 		String defaultCustomIuvGeneratorClass = getProperty("it.govpay.defaultCustomIuvGenerator.class", props, false);
-			if(defaultCustomIuvGeneratorClass != null && !defaultCustomIuvGeneratorClass.isEmpty()) {
+		if(defaultCustomIuvGeneratorClass != null && !defaultCustomIuvGeneratorClass.isEmpty()) {
 			Class<?> c = null;
 			try {
 				c = this.getClass().getClassLoader().loadClass(defaultCustomIuvGeneratorClass);
 			} catch (ClassNotFoundException e) {
-				throw new Exception("La classe ["+defaultCustomIuvGeneratorClass+"] specificata come default per la generazione di IUV custom non e' presente nel classpath");
+				throw new Exception("La classe ["+defaultCustomIuvGeneratorClass+"] specificata per la gestione di IUV non e' presente nel classpath");
 			}
 			Object instance = c.newInstance();
 			if(!(instance instanceof CustomIuv)) {
-				throw new Exception("La classe ["+defaultCustomIuvGeneratorClass+"] come default per la generazione di IUV custom deve implementare l'interfaccia " + CustomIuv.class.getName());
+				throw new Exception("La classe ["+defaultCustomIuvGeneratorClass+"] specificata per la gestione di IUV deve estendere la classe " + CustomIuv.class.getName());
 			}
 			this.defaultCustomIuvGenerator = (CustomIuv) instance;
+		} else {
+			this.defaultCustomIuvGenerator = new CustomIuv();
 		}
-		
+
 	}
 
-	private String getProperty(String name, Properties props, boolean required) throws Exception {
+	private String getProperty(String name, Properties props, boolean required, boolean fromInternalConfig) throws Exception {
 		Logger log = LogManager.getLogger("boot");
-		
+
 		String value = System.getProperty(name);
 
 		if(value != null && value.trim().isEmpty()) {
 			value = null;
 		}
+		
+		String logString = "";
+		if(fromInternalConfig) logString = "da file interno ";
+		else logString = "da file esterno ";
 
 		if(value == null) {
 			if(props != null) {
@@ -156,10 +139,10 @@ public class GovpayConfig {
 					throw new Exception("Proprieta ["+name+"] non trovata");
 				else return null;
 			} else {
-				log.info("Letta proprieta di configurazione " + name + ": " + value);
+				log.info("Letta proprieta di configurazione " + logString + name + ": " + value);
 			}
 		} else {
-			log.info("Letta proprieta di sistema " + name + ": " + value);
+			log.info("Letta proprieta di configurazione " + name + ": " + value);
 		}
 
 		return value.trim();
@@ -167,31 +150,23 @@ public class GovpayConfig {
 
 	private String getProperty(String name, Properties[] props, boolean required) throws Exception {
 		Logger log = LogManager.getLogger("boot");
-		
+
 		String value = null;
-		for(Properties p : props) {
-			try { value = getProperty(name, p, required); } catch (Exception e) { }
+		for(int i=0; i<props.length; i++) {
+			try { value = getProperty(name, props[i], required, i==1); } catch (Exception e) { }
 			if(value != null && !value.trim().isEmpty()) {
 				return value;
 			}
 		}
 
-		if(log!= null) log.info("Proprieta " + name + " non trovata");
+		if(log != null) log.info("Proprieta " + name + " non trovata");
 
 		if(required) 
 			throw new Exception("Proprieta ["+name+"] non trovata");
 		else 
 			return null;
 	}
-	
-	public String getNativeQuery(String nativeQueryKey) throws ServiceException {
-		if(!this.nativeQueries.containsKey(nativeQueryKey)) {
-			throw new ServiceException("Query nativa ["+nativeQueryKey+"] non trovata");
-		}
-		
-		return this.nativeQueries.get(nativeQueryKey);
-	}
-	
+
 	public String getDatabaseType() {
 		return databaseType;
 	}
@@ -207,7 +182,7 @@ public class GovpayConfig {
 	public String getDataSourceAppName() {
 		return dataSourceAppName;
 	}
-	
+
 	public CustomIuv getDefaultCustomIuvGenerator() {
 		return defaultCustomIuvGenerator;
 	} 

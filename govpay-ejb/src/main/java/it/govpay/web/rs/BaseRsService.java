@@ -24,6 +24,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,10 +38,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.openspcoop2.generic_project.exception.NotFoundException;
 import org.openspcoop2.generic_project.exception.ServiceException;
 
@@ -49,7 +48,6 @@ import it.govpay.bd.anagrafica.AnagraficaManager;
 import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GpContext;
 import it.govpay.model.Applicazione;
-import it.govpay.model.Portale;
 import it.govpay.servizi.commons.EsitoOperazione;
 import it.govpay.web.handler.MessageLoggingHandlerUtils;
 import net.sf.json.JSONObject;
@@ -76,18 +74,13 @@ public abstract class BaseRsService {
 	public BaseRsService(String nomeServizio){
 		this();
 		this.nomeServizio = nomeServizio;
+		
 	}
 	
 	public void setHttpServletRequest(HttpServletRequest request) {
 		this.request = request;
 	}
 		
-	public ByteArrayOutputStream logRequest(UriInfo uriInfo, HttpHeaders rsHttpHeaders,String nomeOperazione,InputStream in) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		IOUtils.copy(in, baos);
-		logRequest(uriInfo, rsHttpHeaders, nomeOperazione, baos);
-		return baos;
-	}
 
 	public void logRequest(UriInfo uriInfo, HttpHeaders rsHttpHeaders,String nomeOperazione,ByteArrayOutputStream baos) {
 		MessageLoggingHandlerUtils.logToSystemOut(uriInfo, rsHttpHeaders, this.request,baos,
@@ -95,7 +88,7 @@ public abstract class BaseRsService {
 	}
 	
 	public void logResponse(UriInfo uriInfo, HttpHeaders rsHttpHeaders,String nomeOperazione,ByteArrayOutputStream baos) {
-		MessageLoggingHandlerUtils.logToSystemOut(uriInfo, rsHttpHeaders, this.request, baos,
+		MessageLoggingHandlerUtils.logToSystemOut(uriInfo, rsHttpHeaders, this.request,baos,
 				nomeOperazione, this.nomeServizio, GpContext.TIPO_SERVIZIO_GOVPAY_JSON, VERSIONE_SERVIZIO, log, true);
 	}
 
@@ -141,10 +134,12 @@ public abstract class BaseRsService {
 
 		ByteArrayInputStream bais = new ByteArrayInputStream(jsonObject.toString().getBytes());
 		try{
-			IOUtils.copy(bais, baos);
+			BaseRsService.copy(bais, baos);
+
 			baos.flush();
 			baos.close();
 		}catch(Exception e){}
+		
 		
 		Response res =	Response.status(Response.Status.BAD_REQUEST)
 				.header("Access-Control-Allow-Origin", "*")
@@ -179,18 +174,6 @@ public abstract class BaseRsService {
 		}
 	}
 	
-	protected Portale getPortaleAutenticato(BasicBD bd) throws GovPayException, ServiceException {
-		if(getPrincipal() == null) {
-			throw new GovPayException(EsitoOperazione.AUT_000);
-		}
-
-		try {
-			return AnagraficaManager.getPortaleByPrincipal(bd,getPrincipal());
-		} catch (NotFoundException e) {
-			throw new GovPayException(EsitoOperazione.AUT_001, getPrincipal());
-		}
-	}
-	
 	public static boolean isEmpty(List<?> lista){
 		if(lista == null)
 			return true;
@@ -198,16 +181,24 @@ public abstract class BaseRsService {
 		return lista.isEmpty();
 	}
 	
-	private static ObjectMapper mapper = new ObjectMapper();
-	protected ByteArrayOutputStream toOutputStream(Object o) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try { 
-			mapper.writeValue(baos, o);
-		} catch (Exception e) {
-			log.error("Errore nella serializzazione del messaggio di risposta",e);
-			try {baos.write("Errore nella serializzazione del messaggio di risposta".getBytes());} catch (Exception e2) {}
+	// copy method from From E.R. Harold's book "Java I/O"
+		public static void copy(InputStream in, OutputStream out) 
+				throws IOException {
+
+			// do not allow other threads to read from the
+			// input or write to the output while copying is
+			// taking place
+
+			synchronized (in) {
+				synchronized (out) {
+
+					byte[] buffer = new byte[256];
+					while (true) {
+						int bytesRead = in.read(buffer);
+						if (bytesRead == -1) break;
+						out.write(buffer, 0, bytesRead);
+					}
+				}
+			}
 		}
-		
-		return baos;
-	}
 }

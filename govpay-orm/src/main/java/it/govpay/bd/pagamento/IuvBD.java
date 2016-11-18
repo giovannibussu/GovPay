@@ -21,12 +21,12 @@
 package it.govpay.bd.pagamento;
 
 import it.govpay.bd.BasicBD;
-import it.govpay.model.Applicazione;
-import it.govpay.model.Dominio;
-import it.govpay.bd.model.Iuv;
-import it.govpay.model.Iuv.TipoIUV;
 import it.govpay.bd.model.converter.IuvConverter;
 import it.govpay.bd.pagamento.util.IuvUtils;
+import it.govpay.model.Applicazione;
+import it.govpay.bd.model.Dominio;
+import it.govpay.model.Iuv;
+import it.govpay.model.Iuv.TipoIUV;
 import it.govpay.orm.IUV;
 import it.govpay.orm.dao.jdbc.JDBCIUVService;
 import it.govpay.orm.dao.jdbc.converter.IUVFieldConverter;
@@ -51,58 +51,56 @@ import org.openspcoop2.utils.id.serial.IDSerialGeneratorType;
 import org.openspcoop2.utils.id.serial.InfoStatistics;
 
 public class IuvBD extends BasicBD {
-	
-	public enum	Algoritmo {
-		BASE, PAP
-	}
 
 	private static Logger log = Logger.getLogger(IuvBD.class);
 
 	public IuvBD(BasicBD basicBD) {
 		super(basicBD);
 	}
-	
-	public Iuv generaIuv(Applicazione applicazione, Dominio dominio, String codVersamentoEnte, int auxDigit, int applicationCode, TipoIUV type) throws ServiceException {
-		return generaIuv(applicazione, dominio, codVersamentoEnte, auxDigit, applicationCode, type, Algoritmo.BASE, true);
-	}
 
-
-	public Iuv generaIuv(Applicazione applicazione, Dominio dominio, String codVersamentoEnte, int auxDigit, int applicationCode, TipoIUV type, Algoritmo alg, boolean persistence) throws ServiceException {
-		long prg = 0;
+	public Iuv generaIuv(Applicazione applicazione, Dominio dominio, String codVersamentoEnte, TipoIUV type, String prefix) throws ServiceException {
+		
+		long prg = getNextPrgIuv(dominio.getCodDominio() + prefix, type);
+		
 		String iuv = null;
-		switch (alg) {
-		case BASE:
-			prg = getNextPrgIuv(dominio.getCodDominio(), type);
-			
-			switch (type) {
-			case ISO11694:
-				String reference = String.format("%015d", prg);
+		
+		switch (type) {
+		case ISO11694:
+			{
+				String reference = prefix + String.format("%0" + (15 - prefix.length()) + "d", prg);
+				if(reference.length() > 15) 
+					throw new ServiceException("Superato il numero massimo di IUV generabili [Dominio:"+dominio.getCodDominio()+" Prefisso:"+prefix+"]" );
 				String check = IuvUtils.getCheckDigit(reference);
 				iuv = "RF" + check + reference;
-				break;
-			case NUMERICO:
-				iuv = IuvUtils.buildIuvNumerico(prg, auxDigit, applicationCode);
-				break;
 			}
-			
 			break;
-			
-		case PAP:
-			String gd = IuvUtils.retriveActualJulianDate();
-			prg = getNextPrgIuv(dominio.getCodDominio(), type, gd);
-			
-			switch (type) {
-			case ISO11694:
-				String reference = IuvUtils.buildReference(gd, Long.toString(prg));
-				String check = IuvUtils.getCheckDigit(reference);
-				iuv = "RF" + check + reference;
-				break;
-			case NUMERICO:
-				iuv = IuvUtils.buildIuvNumerico(prg, auxDigit, applicationCode);
+		case NUMERICO:
+			{
+				String reference = prefix + String.format("%0" + (13 - prefix.length()) + "d", prg);
+				
+				if(reference.length() > 15) 
+					throw new ServiceException("Superato il numero massimo di IUV generabili [Dominio:"+dominio.getCodDominio()+" Prefisso:"+prefix+"]" );
+				
+				String check = "";
+				// Vedo se utilizzare l'application code o il segregation code
+				switch (dominio.getAuxDigit()) {
+					case 0: 
+						check = IuvUtils.getCheckDigit93(reference, dominio.getAuxDigit(), dominio.getStazione(this).getApplicationCode()); 
+					break;
+					case 3: 
+						if(dominio.getStazione(this).getIntermediario(this).getSegregationCode() == null)
+							throw new ServiceException("Dominio con IUV segregato associato ad Intermediario privo di codice di segregazione [Dominio:"+dominio.getCodDominio()+" Intermediario:"+dominio.getStazione(this).getIntermediario(this).getCodIntermediario()+"]" ); 
+						
+						check = IuvUtils.getCheckDigit93(reference, dominio.getAuxDigit(), dominio.getStazione(this).getIntermediario(this).getSegregationCode()); 
+					break;
+					default: throw new ServiceException("Codice AUX non supportato [Dominio:"+dominio.getCodDominio()+" AuxDigit:"+dominio.getAuxDigit()+"]" ); 
+				}
+				
+				iuv = reference + check;
 				break;
 			}
 		}
-		
+
 		Iuv iuvDTO = new Iuv();
 		iuvDTO.setIdDominio(dominio.getId());
 		iuvDTO.setPrg(prg);
@@ -110,12 +108,18 @@ public class IuvBD extends BasicBD {
 		iuvDTO.setDataGenerazione(new Date());
 		iuvDTO.setIdApplicazione(applicazione.getId());
 		iuvDTO.setTipo(type);
-		iuvDTO.setCodVersamentoEnte(codVersamentoEnte);
-		iuvDTO.setApplicationCode(applicationCode);
-		if(persistence)
-			return insertIuv(iuvDTO);
-		else
-			return iuvDTO;
+		iuvDTO.setCodVersamentoEnte(codVersamentoEnte != null ? codVersamentoEnte : iuv);
+		iuvDTO.setAuxDigit(dominio.getAuxDigit());
+		iuvDTO.setApplicationCode(dominio.getStazione(this).getApplicationCode());
+		switch (dominio.getAuxDigit()) {
+			case 0: 
+				iuvDTO.setApplicationCode(dominio.getStazione(this).getApplicationCode());
+			break;
+			case 3: 
+				iuvDTO.setApplicationCode(dominio.getStazione(this).getIntermediario(this).getSegregationCode());
+			break;
+		}
+		return insertIuv(iuvDTO);
 	}
 
 	public Iuv insertIuv(Iuv iuv) throws ServiceException{
@@ -139,11 +143,7 @@ public class IuvBD extends BasicBD {
 	 * @return prg
 	 * @throws ServiceException
 	 */
-	
 	private long getNextPrgIuv(String codDominio, TipoIUV type) throws ServiceException {
-		return getNextPrgIuv(codDominio, type, "");
-	}
-	private long getNextPrgIuv(String codDominio, TipoIUV type, String gd) throws ServiceException {
 		InfoStatistics infoStat = null;
 		BasicBD bd = null;
 		try {
@@ -152,7 +152,7 @@ public class IuvBD extends BasicBD {
 			org.openspcoop2.utils.id.serial.IDSerialGeneratorParameter params = new org.openspcoop2.utils.id.serial.IDSerialGeneratorParameter("GovPay");
 			params.setTipo(IDSerialGeneratorType.NUMERIC);
 			params.setWrap(false);
-			params.setInformazioneAssociataAlProgressivo(codDominio + gd + type.toString()); // il progressivo sarà relativo a questa informazione
+			params.setInformazioneAssociataAlProgressivo(codDominio+type.toString()); // il progressivo sarà relativo a questa informazione
 
 			java.sql.Connection con = null; 
 

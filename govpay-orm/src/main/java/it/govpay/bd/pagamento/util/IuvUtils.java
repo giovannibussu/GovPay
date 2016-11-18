@@ -21,16 +21,10 @@
 package it.govpay.bd.pagamento.util;
 
 import java.math.BigInteger;
-import java.util.Calendar;
 
-import org.apache.commons.lang.StringUtils;
 import org.openspcoop2.generic_project.exception.ServiceException;
 
 public class IuvUtils {
-	
-	private static final char FILL_CHARACTER = '0';
-	private static final int JULIAN_DATE_LENGTH = 3;
-	private static final int REFERENCE_CODE_PART_LENGTH = 15;
 	
 	public static boolean checkISO11640(String iuv){
 		if(iuv.length() <= 4) return false;
@@ -88,7 +82,7 @@ public class IuvUtils {
 			case 'Y': sb.append("34"); break;
 			case 'Z': sb.append("35"); break;
 			default:
-				throw new ServiceException("Carattere non amesso nell'IUV");
+				throw new ServiceException("Carattere [" + c +"] non amesso nell'IUV");
 			}
 		}
 
@@ -98,31 +92,8 @@ public class IuvUtils {
 		return String.format("%02d", diff98);
 	}
 	
-	public static String buildIuvNumerico(long prg, int auxDigit, int applicationCode) {
-		String reference = String.format("%013d", prg);
+	public static String getCheckDigit93(String reference, int auxDigit, int applicationCode) {
 		long resto93 = (Long.parseLong(String.valueOf(auxDigit) + String.format("%02d", applicationCode) + reference)) % 93;
-		return reference + String.format("%02d", resto93);
-	}
-	
-	
-	public static String retriveActualJulianDate() {
-		StringBuilder sb = new StringBuilder();
-		Calendar now = Calendar.getInstance();
-		int year = now.get(Calendar.YEAR);
-		String anno = String.valueOf(year);
-		String an = anno.substring(1);
-		int day = now.get(Calendar.DAY_OF_YEAR);
-		return sb
-				.append(an)
-				.append(StringUtils.leftPad(String.valueOf(day),
-						JULIAN_DATE_LENGTH, FILL_CHARACTER)).toString();
-	}
-	
-	public static String buildReference(String prefix, String suffix) {
-		StringBuilder sb = new StringBuilder();
-		return sb
-				.append(prefix)
-				.append(StringUtils.leftPad(suffix,
-						REFERENCE_CODE_PART_LENGTH - prefix.length(), FILL_CHARACTER)).toString();
+		return String.format("%02d", resto93);
 	}
 }

@@ -24,7 +24,7 @@ public class Costanti {
 	public static final String LABEL_DETTAGLIO_PAGAMENTI = "Dettaglio Pagamenti";
 	public static final String LABEL_IUV = "Iuv";
 	public static final String LABEL_ULTERIORI_INFORMAZIONI = "Ulteriori Informazioni";
-	public static final String LABEL_IMPORTO = "Importo";
+	public static final String LABEL_IMPORTO_PAGATO = "Importo Pagato";
 	public static final String LABEL_ID_RIVERSAMENTO = "Id Riversamento";
 	public static final String LABEL_DATA_PAGAMENTO = "Data Pagamento";
 	public static final String LABEL_CODICE_VERSAMENTO_ENTE = "Cod Versamento Ente";
@@ -48,6 +48,13 @@ public class Costanti {
 	public static final String ID_REGOLAMENTO_COL = "idRegolamento";
 	public static final String IBAN_ACCREDITO_COL = "ibanAccredito";
 	public static final String IUV_COL = "iuv";
+	public static final String COL_UNO = "colUno";
+	
+	public static final String PAGAMENTI_SENZA_RPT_KEY = "PagamentiSenzaRpt";
+	public static final String LABEL_PAGAMENTI_SENZA_RPT = "Pagamenti Senza Rpt";
+	
+	public static final String MARCA_DA_BOLLO_KEY = "MarcaDaBolloTelematica";
+	public static final String LABEL_MARCA_DA_BOLLO_TELEMATICA = "Marca da Bollo Telematica";
 	
 	/** LABEL PDF RT */
 	
@@ -91,4 +98,25 @@ public class Costanti {
 	public static final String LABEL_TIPO_VERSAMENTO_AD = "Addebito diretto";
 	public static final String LABEL_TIPO_VERSAMENTO_OBEP = "On-line Banking e-payment";
 	public static final String LABEL_TIPO_VERSAMENTO_PO = "Pagamento attivato presso PSP";
+	
+	
+	public static final String LABEL_DATA_REVOCA = "Data Revoca";
+	public static final String LABEL_ESITO_REVOCA = "RICEVUTA DI REVOCA";
+	public static final String LABEL_IMPORTO_REVOCA = "Importo Revocato";
+	
+	
+	/** LABEL AVVISO PAGAMENTO **/
+	public static final String LABEL_RIFERIMENTI = "Riferimenti";
+	public static final String LABEL_COMUNICAZIONI = "Comunicazioni";
+	public static final String LABEL_DATA_SCADENZA = "Data Scadenza";
+	public static final String LABEL_IMPORTO = "Importo";
+	public static final String LABEL_IMPORTO_DA_PAGARE = "Importo da Pagare";
+	public static final String LABEL_SCADENZA_DEL_PAGAMENTO = "Scadenze di Pagamento";
+	public static final String LABEL_CODICE_FISCALE_CREDITORE = "Codice Fiscale/P.IVA Ente Creditore";
+	public static final String LABEL_CODICE_AVVISO_PAGAMENTO = "Avviso di Pagamento N°";
+	public static final String LABEL_CODICE_AVVISO = "Codice Avviso";
+	public static final String LABEL_CODICE_VERSAMENTO = "Codice Versamento";
+	public static final String LABEL_CODICE_AVVISO_PAGAMENTO_UPPER_CASE = "AVVISO DI PAGAMENTO N°";
+	public static final String LABEL_INTESTATO_A = "Intestato a:";
+	
 }

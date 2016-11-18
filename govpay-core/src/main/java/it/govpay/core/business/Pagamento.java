@@ -52,7 +52,6 @@ import it.govpay.bd.pagamento.NotificheBD;
 import it.govpay.bd.pagamento.PagamentiBD;
 import it.govpay.bd.pagamento.RptBD;
 import it.govpay.bd.pagamento.RrBD;
-import it.govpay.bd.pagamento.VersamentiBD;
 import it.govpay.core.business.model.Risposta;
 import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.exceptions.NdpException;
@@ -74,7 +73,6 @@ import it.govpay.core.utils.client.NodoClient.Azione;
 import it.govpay.core.utils.thread.InviaNotificaThread;
 import it.govpay.core.utils.thread.ThreadExecutorManager;
 import it.govpay.model.Anagrafica;
-import it.govpay.model.Applicazione;
 import it.govpay.bd.model.Canale;
 import it.govpay.bd.model.Dominio;
 import it.govpay.model.Intermediario;
@@ -112,7 +110,6 @@ public class Pagamento extends BasicBD {
 
 		GpContext ctx = GpThreadLocal.get();
 		List<Versamento> versamenti = new ArrayList<Versamento>();
-		VersamentiBD versamentiBD = new VersamentiBD(this);
 
 		for(Object v : gpAvviaTransazionePagamento.getVersamentoOrVersamentoRef()) {
 			Versamento versamentoModel = null;
@@ -125,7 +122,7 @@ public class Pagamento extends BasicBD {
 			} else {
 				it.govpay.servizi.commons.VersamentoKey versamento = (it.govpay.servizi.commons.VersamentoKey) v;
 
-				String codDominio = null, codApplicazione = null, codVersamentoEnte = null, iuv = null, bundlekey = null;
+				String codDominio = null, codApplicazione = null, codVersamentoEnte = null, iuv = null, bundlekey = null, codUnivocoDebitore = null;
 
 				Iterator<JAXBElement<String>> iterator = versamento.getContent().iterator();
 				while(iterator.hasNext()){
@@ -133,6 +130,9 @@ public class Pagamento extends BasicBD {
 
 					if(element.getName().equals(VersamentoUtils._VersamentoKeyBundlekey_QNAME)) {
 						bundlekey = element.getValue();
+					}
+					if(element.getName().equals(VersamentoUtils._VersamentoKeyCodUnivocoDebitore_QNAME)) {
+						codUnivocoDebitore = element.getValue();
 					}
 					if(element.getName().equals(VersamentoUtils._VersamentoKeyCodApplicazione_QNAME)) {
 						codApplicazione = element.getValue();
@@ -148,63 +148,16 @@ public class Pagamento extends BasicBD {
 					}
 				}
 
-				// Versamento per riferimento codApplicazione/codVersamentoEnte
-
-				if(codApplicazione != null && codVersamentoEnte != null) {
-					ctx.log("rpt.acquisizioneVersamentoRef", codApplicazione, codVersamentoEnte);
-					Applicazione applicazione = null;
-					try {
-						applicazione = AnagraficaManager.getApplicazione(this, codApplicazione);
-					} catch (NotFoundException e) {
-						throw new GovPayException(EsitoOperazione.APP_000, codApplicazione);
-					}
-
-					try {
-						versamentoModel = versamentiBD.getVersamento(applicazione.getId(), codVersamentoEnte);
-						versamentoModel.setIuvProposto(iuv);
-					} catch (NotFoundException e) {
-						throw new GovPayException(EsitoOperazione.VER_008, codApplicazione, codVersamentoEnte);
-					}
-				}
-
-
-				// Versamento per riferimento codDominio/iuv
-				if(codDominio != null && iuv != null) {
-					ctx.log("rpt.acquisizioneVersamentoRefIuv", codDominio, iuv);
-
-					Dominio dominio = null;
-					try {
-						dominio = AnagraficaManager.getDominio(this, codDominio);
-					} catch (NotFoundException e) {
-						throw new GovPayException(EsitoOperazione.DOM_000, codDominio);
-					}
-
-					IuvBD iuvBD = new IuvBD(this);
-					it.govpay.model.Iuv iuvModel = null;
-					try {
-						iuvModel = iuvBD.getIuv(dominio.getId(), iuv);
-					} catch (NotFoundException e) {
-						throw new GovPayException(EsitoOperazione.VER_008);
-					}
-
-					Applicazione applicazione = AnagraficaManager.getApplicazione(this, iuvModel.getIdApplicazione());
-
-					try {
-						versamentoModel = versamentiBD.getVersamento(applicazione.getId(), iuvModel.getCodVersamentoEnte());
-					} catch (NotFoundException e) {
-						throw new GovPayException(EsitoOperazione.VER_008, applicazione.getCodApplicazione(), iuvModel.getCodVersamentoEnte());
-					}
-				}
-
-				// Versamento per riferimento codDominio/iuv
-				if(codApplicazione != null && bundlekey != null) {
-					ctx.log("rpt.acquisizioneVersamentoRefBundle", codApplicazione, bundlekey);
-					throw new RuntimeException("Not supported yet");
-				}
+				it.govpay.core.business.Versamento versamentoBusiness = new it.govpay.core.business.Versamento(this);
+				versamentoModel = versamentoBusiness.chiediVersamento(codApplicazione, codVersamentoEnte, bundlekey, codUnivocoDebitore, codDominio, iuv);
 			}
 			
-			if(!versamentoModel.getApplicazione(this).isAbilitato()) {
-				ctx.log("pagamento.applicazioneDisabilitata", versamentoModel.getApplicazione(this).getCodApplicazione(), versamentoModel.getCodVersamentoEnte());
+			if(!versamentoModel.getUo(this).isAbilitato()) {
+				throw new GovPayException("Il pagamento non puo' essere avviato poiche' uno dei versamenti risulta associato ad una unita' operativa disabilitata [Uo:"+versamentoModel.getUo(this).getCodUo()+"].", EsitoOperazione.UOP_001, versamentoModel.getUo(this).getCodUo());
+			}
+			
+			if(!versamentoModel.getUo(this).getDominio(this).isAbilitato()) {
+				throw new GovPayException("Il pagamento non puo' essere avviato poiche' uno dei versamenti risulta associato ad un dominio disabilitato [Dominio:"+versamentoModel.getUo(this).getDominio(this).getCodDominio()+"].", EsitoOperazione.DOM_001, versamentoModel.getUo(this).getDominio(this).getCodDominio());
 			}
 			
 			versamenti.add(versamentoModel);
@@ -347,6 +300,7 @@ public class Pagamento extends BasicBD {
 
 			Intermediario intermediario = AnagraficaManager.getIntermediario(this, stazione.getIdIntermediario());
 
+			Iuv iuvBusiness = new Iuv(this);
 			IuvBD iuvBD = new IuvBD(this);
 			RptBD rptBD = new RptBD(this);
 			it.govpay.core.business.Versamento versamentiBusiness = new it.govpay.core.business.Versamento(this);
@@ -358,14 +312,15 @@ public class Pagamento extends BasicBD {
 				if(versamento.getId() == null) {
 					versamentiBusiness.caricaVersamento(versamento, false, aggiornaSeEsiste);
 				}
-				it.govpay.bd.model.Iuv iuv = null;
+				it.govpay.model.Iuv iuv = null;
 				String ccp = null;
 
 				// Verifico se ha uno IUV suggerito ed in caso lo assegno
 				if(versamento.getIuvProposto() != null) {
-					Iuv iuvBusiness = new Iuv(this);
-					iuv = iuvBusiness.caricaIUV(versamento.getApplicazione(this), versamento.getUo(this).getDominio(this), versamento.getIuvProposto(), TipoIUV.ISO11694, versamento.getCodVersamentoEnte());
-					ccp = iuv.isNuovo() ? it.govpay.bd.model.Rpt.CCP_NA : IuvUtils.buildCCP();
+					TipoIUV tipoIuv = iuvBusiness.getTipoIUV(versamento.getIuvProposto());
+					iuvBusiness.checkIUV(versamento.getUo(this).getDominio(this), versamento.getIuvProposto(), tipoIuv);
+					iuv = iuvBusiness.caricaIUV(versamento.getApplicazione(this), versamento.getUo(this).getDominio(this), versamento.getIuvProposto(), tipoIuv, versamento.getCodVersamentoEnte());
+					ccp = IuvUtils.buildCCP(tipoIuv);
 					ctx.log("iuv.assegnazioneIUVCustom", versamento.getApplicazione(this).getCodApplicazione(), versamento.getCodVersamentoEnte(), versamento.getUo(this).getDominio(this).getCodDominio(), versamento.getIuvProposto(), ccp);
 				} else {
 
@@ -378,15 +333,15 @@ public class Pagamento extends BasicBD {
 					if(versamento.getUo(this).getDominio(this).isRiusoIuv()) {
 						try {
 							iuv = iuvBD.getIuv(versamento.getIdApplicazione(), versamento.getCodVersamentoEnte(), TipoIUV.NUMERICO);
-							ccp = IuvUtils.buildCCP();
+							ccp = IuvUtils.buildCCP(TipoIUV.NUMERICO);
 							ctx.log("iuv.assegnazioneIUVRiuso", versamento.getApplicazione(this).getCodApplicazione(), versamento.getCodVersamentoEnte(), versamento.getUo(this).getDominio(this).getCodDominio(), iuv.getIuv(), ccp);
 						} catch (NotFoundException e) {
-							iuv = iuvBD.generaIuv(versamento.getApplicazione(this), versamento.getUo(this).getDominio(this), versamento.getCodVersamentoEnte(), it.govpay.model.Iuv.AUX_DIGIT, stazione.getApplicationCode(), it.govpay.model.Iuv.TipoIUV.ISO11694);
+							iuv = iuvBusiness.generaIuv(versamento.getApplicazione(this), versamento.getUo(this).getDominio(this), versamento.getCodVersamentoEnte(), it.govpay.model.Iuv.TipoIUV.ISO11694);
 							ccp = Rpt.CCP_NA;
 							ctx.log("iuv.assegnazioneIUVGenerato", versamento.getApplicazione(this).getCodApplicazione(), versamento.getCodVersamentoEnte(), versamento.getUo(this).getDominio(this).getCodDominio(), iuv.getIuv(), ccp);
 						}
 					} else {
-						iuv = iuvBD.generaIuv(versamento.getApplicazione(this), versamento.getUo(this).getDominio(this), versamento.getCodVersamentoEnte(), it.govpay.model.Iuv.AUX_DIGIT, stazione.getApplicationCode(), it.govpay.model.Iuv.TipoIUV.ISO11694);
+						iuv = iuvBusiness.generaIuv(versamento.getApplicazione(this), versamento.getUo(this).getDominio(this), versamento.getCodVersamentoEnte(), it.govpay.model.Iuv.TipoIUV.ISO11694);
 						ccp = Rpt.CCP_NA;
 						ctx.log("iuv.assegnazioneIUVGenerato", versamento.getApplicazione(this).getCodApplicazione(), versamento.getCodVersamentoEnte(), versamento.getUo(this).getDominio(this).getCodDominio(), iuv.getIuv(), ccp);
 					}
@@ -624,7 +579,7 @@ public class Pagamento extends BasicBD {
 				boolean done = false;
 				SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 				
-				while(done) {
+				while(!done) {
 
 					boolean acquisiti = false;
 
@@ -639,8 +594,8 @@ public class Pagamento extends BasicBD {
 						richiesta.setRangeA(a.getTime());
 						richiesta.setRangeDa(da.getTime());
 
-						log.debug("Richiedo la lista delle RPT pendenti (dal " + dateFormat.format(da) + " a " + dateFormat.format(a) + ")");
-						ctx.log("pendenti.listaPendenti", dominio.getCodDominio(), dateFormat.format(da), dateFormat.format(a));
+						log.debug("Richiedo la lista delle RPT pendenti (dal " + dateFormat.format(da.getTime()) + " a " + dateFormat.format(a.getTime()) + ")");
+						ctx.log("pendenti.listaPendenti", dominio.getCodDominio(), dateFormat.format(da.getTime()), dateFormat.format(a.getTime()));
 
 						NodoChiediListaPendentiRPTRisposta risposta = null;
 						String transactionId = null;
@@ -680,10 +635,10 @@ public class Pagamento extends BasicBD {
 							da = (Calendar) a.clone();
 							da.add(Calendar.DATE, -finestra);
 							
-							log.debug("Lista pendenti con troppi elementi. Ricalcolo la finestra: (dal " + dateFormat.format(da) + " a " + dateFormat.format(a) + ")");
+							log.debug("Lista pendenti con troppi elementi. Ricalcolo la finestra: (dal " + dateFormat.format(da.getTime()) + " a " + dateFormat.format(a.getTime()) + ")");
 							continue;
 						} else {
-							ctx.log("pendenti.listaPendentiDailyPiena", dateFormat.format(a));
+							ctx.log("pendenti.listaPendentiDailyPiena", dateFormat.format(a.getTime()));
 							log.debug("Lista pendenti con troppi elementi, ma impossibile diminuire ulteriormente la finesta. Elenco accettato.");
 						}
 
