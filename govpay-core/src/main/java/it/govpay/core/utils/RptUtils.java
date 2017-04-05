@@ -85,7 +85,6 @@ import it.govpay.model.Iuv;
 import it.govpay.model.Portale;
 import it.govpay.model.Rpt.FirmaRichiesta;
 import it.govpay.model.Rpt.StatoRpt;
-import it.govpay.servizi.commons.EsitoOperazione;
 
 public class RptUtils {
 

@@ -44,12 +44,12 @@ public class RtRestController extends BasePapRsService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response papRestChiediRT(InputStream is, @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders, @PathParam("codDominio") String codDominio, @PathParam("iuv") String iuv) {
 
-		GpContext ctx = GpThreadLocal.get();
+		GpContext ctx = null;
 
 		BasicBD bd = null;
 		try {
 			logRequest(uriInfo, httpHeaders,"papRestChiediRT", is);
-			
+			ctx = GpThreadLocal.get();
 			ctx.log("pap.ricevutaRichiesta");
 			bd = BasicBD.newInstance(ctx.getTransactionId());
 

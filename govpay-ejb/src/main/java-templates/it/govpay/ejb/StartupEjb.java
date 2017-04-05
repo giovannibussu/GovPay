@@ -177,11 +177,7 @@ public class StartupEjb {
 
 		ctx.log();
 
-<<<<<<< HEAD:govpay-ejb/src/main/java/it/govpay/ejb/StartupEjb.java
-		log.info("Inizializzazione GovPay v2.3.pap completata con successo.  ($Id$)");
-=======
 		log.info("Inizializzazione GovPay ${project.version} (build " + commit + ") completata con successo.");
->>>>>>> master:govpay-ejb/src/main/java-templates/it/govpay/ejb/StartupEjb.java
 	}
 
 	@PreDestroy

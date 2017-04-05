@@ -7,6 +7,8 @@ import it.govpay.bd.anagrafica.AnagraficaManager;
 import it.govpay.model.Applicazione;
 import it.govpay.model.Portale;
 import it.govpay.core.business.Pagamento;
+import it.govpay.core.business.model.AvviaTransazioneDTO;
+import it.govpay.core.business.model.AvviaTransazioneDTOResponse;
 import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
@@ -18,7 +20,6 @@ import it.govpay.servizi.commons.Versamento.SingoloVersamento;
 import it.govpay.servizi.commons.Versamento.SingoloVersamento.Tributo;
 import it.govpay.servizi.commons.TipoContabilita;
 import it.govpay.servizi.gpprt.GpAvviaTransazionePagamento;
-import it.govpay.servizi.gpprt.GpAvviaTransazionePagamentoResponse;
 import net.sf.json.JSONObject;
 import net.sf.json.JsonConfig;
 import it.govpay.servizi.commons.Anagrafica;
@@ -67,13 +68,13 @@ public class RptRestController extends BasePapRsService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response papRestInviaRpt(InputStream is, @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders, @PathParam("codDominio") String codDominio) {
 
-		GpContext ctx = GpThreadLocal.get();
+		GpContext ctx = null;
 
 		BasicBD bd = null;
 		try {
 			
 			ByteArrayOutputStream baosRequest = logRequest(uriInfo, httpHeaders,"papRestInviaRpt", is);
-
+			ctx = GpThreadLocal.get();
 			JsonConfig jsonConfig = new JsonConfig();
 			Map<String,Class<?>> classMap = new HashMap<String, Class<?>>();
 			classMap.put("datiSingoloVersamento", DatiSingoloVersamento.class); 
@@ -187,21 +188,32 @@ public class RptRestController extends BasePapRsService {
 			}
 
 			Pagamento pagamento = new Pagamento(bd);
-			GpAvviaTransazionePagamentoResponse avviaTransazione = pagamento.avviaTransazione(portale, richiesta, canaleModel);
-
-			ctx.getContext().getRequest().addGenericProperty(new Property("ccp", avviaTransazione.getRifTransazione().get(0).getCcp()));
+			
+			AvviaTransazioneDTO dto = new AvviaTransazioneDTO();
+			dto.setAggiornaSeEsisteB(richiesta.isAggiornaSeEsiste());
+			dto.setAutenticazione(richiesta.getAutenticazione().value());
+			dto.setCanale(canaleModel);
+			dto.setIbanAddebito(richiesta.getIbanAddebito());
+			dto.setPortale(portale);
+			dto.setUrlRitorno(richiesta.getUrlRitorno());
+			dto.setVersamentoOrVersamentoRef(richiesta.getVersamentoOrVersamentoRef());
+			dto.setVersante(richiesta.getVersante());
+			
+			AvviaTransazioneDTOResponse dtoResponse = pagamento.avviaTransazione(dto);
+			
+			ctx.getContext().getRequest().addGenericProperty(new Property("ccp", dtoResponse.getRifTransazioni().get(0).getCcp()));
 			
 			NodoInviaRPTRisposta wsResponse = new NodoInviaRPTRisposta();
 			wsResponse.setEsito("OK");
 			
-			if(avviaTransazione.getUrlRedirect() != null) {
-				ctx.getContext().getResponse().addGenericProperty(new Property("codPspSession", avviaTransazione.getPspSessionId()));
+			if(dtoResponse.getPspRedirectURL() != null) {
+				ctx.getContext().getResponse().addGenericProperty(new Property("codPspSession", dtoResponse.getCodSessione()));
 				ctx.log("pap.inviaRptOk");
 			} else {
 				ctx.log("pap.inviaRptOkNoRedirect");
 			}
-			wsResponse.setRedirect(avviaTransazione.getUrlRedirect() != null ? 1 : 0);
-			wsResponse.setUrl(avviaTransazione.getUrlRedirect());
+			wsResponse.setRedirect(dtoResponse.getPspRedirectURL() != null ? 1 : 0);
+			wsResponse.setUrl(dtoResponse.getPspRedirectURL());
 
 			ctx.log("pap.ricevutaRichiestaOk");
 			logResponse(uriInfo, httpHeaders,"papRestInviaRpt", toOutputStream(wsResponse));

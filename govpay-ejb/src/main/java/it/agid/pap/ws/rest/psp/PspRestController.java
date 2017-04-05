@@ -46,12 +46,12 @@ public class PspRestController extends BasePapRsService {
 			@DefaultValue(PapConstants.LIST_PAGE_PARAM) @QueryParam("pagina") Integer pagina) {
 
 		
-		GpContext ctx = GpThreadLocal.get();
+		GpContext ctx = null; 
 		
 		BasicBD bd = null;
 		try {
 			logRequest(uriInfo, httpHeaders,"papRestChiediListaPSP", is);
-
+			ctx = GpThreadLocal.get();
 			ctx.log("pap.ricevutaRichiesta");
 			bd = BasicBD.newInstance(ctx.getTransactionId());
 			PspBD pspBD = new PspBD(bd);
