@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -52,7 +51,6 @@ import it.govpay.model.Iuv.TipoIUV;
 import it.govpay.bd.model.Pagamento;
 import it.govpay.model.Rpt.FirmaRichiesta;
 import it.govpay.bd.model.Psp;
-import it.govpay.bd.model.RendicontazioneSenzaRpt;
 import it.govpay.bd.model.Rpt;
 import it.govpay.bd.model.Stazione;
 import it.govpay.bd.model.Versamento;
@@ -157,7 +155,7 @@ public class PagamentiTelematiciCCPImpl implements PagamentiTelematiciCCP {
 			bd = BasicBD.newInstance(GpThreadLocal.get().getTransactionId());
 
 			String principal = getPrincipal();
-			if(principal == null && GovpayConfig.getInstance().isPddAuthEnable()) {
+			if(GovpayConfig.getInstance().isPddAuthEnable() && principal == null) {
 				ctx.log("ccp.erroreNoAutorizzazione");
 				throw new NotAuthorizedException("Autorizzazione fallita: principal non fornito");
 			}
@@ -223,18 +221,7 @@ public class PagamentiTelematiciCCPImpl implements PagamentiTelematiciCCP {
 						if(versamento.getStatoVersamento().equals(StatoVersamento.ANOMALO))
 							throw new NdpException(FaultPa.PAA_PAGAMENTO_DUPLICATO, codDominio, "Il pagamento risulta gi\u00E0 effettuato, ma si riscontrano anomalie negli importi. Per maggiori informazioni contattare il supporto clienti.");
 						
-						if(versamento.getStatoVersamento().equals(StatoVersamento.ESEGUITO_SENZA_RPT)) {
-							PagamentiBD pagamentiBD = new PagamentiBD(bd);
-							List<RendicontazioneSenzaRpt> pagamenti = pagamentiBD.getRendicontazioniSenzaRptBySingoloVersamento(versamento.getSingoliVersamenti(bd).get(0).getId());
-							if(pagamenti.isEmpty())
-								throw new NdpException(FaultPa.PAA_PAGAMENTO_DUPLICATO, codDominio);
-							else {
-								RendicontazioneSenzaRpt pagamento = pagamenti.get(0);
-								throw new NdpException(FaultPa.PAA_PAGAMENTO_DUPLICATO, codDominio, "Il pagamento risulta gi\u00E0 effettuato in data " + sdf.format(pagamento.getDataRendicontazione()) + " [Psp:" + pagamento.getFrApplicazione(bd).getFr(bd).getPsp(bd).getCodPsp() + " Iur:" + pagamento.getIur() + "]");
-							}
-						}
-						
-						if(versamento.getStatoVersamento().equals(StatoVersamento.ESEGUITO)) {
+						if(versamento.getStatoVersamento().equals(StatoVersamento.ESEGUITO) || versamento.getStatoVersamento().equals(StatoVersamento.ESEGUITO_SENZA_RPT)) {
 							PagamentiBD pagamentiBD = new PagamentiBD(bd);
 							List<Pagamento> pagamenti = pagamentiBD.getPagamentiBySingoloVersamento(versamento.getSingoliVersamenti(bd).get(0).getId());
 							if(pagamenti.isEmpty())
@@ -243,10 +230,8 @@ public class PagamentiTelematiciCCPImpl implements PagamentiTelematiciCCP {
 								Pagamento pagamento = pagamenti.get(0);
 								throw new NdpException(FaultPa.PAA_PAGAMENTO_DUPLICATO, codDominio, "Il pagamento risulta gi\u00E0 effettuato in data " + sdf.format(pagamento.getDataPagamento()) + " [Psp:" + pagamento.getRpt(bd).getPsp(bd).getCodPsp() + " Iur:" + pagamento.getIur() + "]");
 							}
-								
 						}
 					}
-
 				} catch (NotFoundException e) {
 					// Versamento non trovato, devo interrogare l'applicazione.
 					
@@ -377,7 +362,6 @@ public class PagamentiTelematiciCCPImpl implements PagamentiTelematiciCCP {
 		} finally {
 			try{
 				if(bd != null) {
-
 					GiornaleEventi ge = new GiornaleEventi(bd);
 					evento.setEsito(response.getPaaAttivaRPTRisposta().getEsito());
 					evento.setDataRisposta(new Date());
@@ -437,7 +421,7 @@ public class PagamentiTelematiciCCPImpl implements PagamentiTelematiciCCP {
 		evento.setCodDominio(codDominio);
 		evento.setIuv(iuv);
 		evento.setCcp(ccp);
-		evento.setTipoEvento(TipoEvento.paaAttivaRPT);
+		evento.setTipoEvento(TipoEvento.paaVerificaRPT);
 		evento.setCodPsp(psp);
 		evento.setTipoVersamento(TipoVersamento.ATTIVATO_PRESSO_PSP);
 		evento.setFruitore("NodoDeiPagamentiSPC");
@@ -484,8 +468,8 @@ public class PagamentiTelematiciCCPImpl implements PagamentiTelematiciCCP {
 				iuvModel = iuvBD.getIuv(dominio.getId(), iuv);
 				ctx.log("ccp.iuvPresente", iuvModel.getCodVersamentoEnte());
 			} catch (NotFoundException e) {
-				// iuv non trovato... se non ho una applicazione di default il pagamento e' sconosciuto.
-				if(dominio.getIdApplicazioneDefault() == null) {
+				// iuv non trovato... se non ho una applicazione riconducibile il pagamento e' sconosciuto.
+				if(it.govpay.bd.GovpayConfig.getInstance().getDefaultCustomIuvGenerator().getCodApplicazione(dominio, iuv, dominio.getApplicazioneDefault(bd)) == null) {
 					ctx.log("ccp.iuvNonPresenteNoAppDefault");
 					throw new NdpException(FaultPa.PAA_PAGAMENTO_SCONOSCIUTO, codDominio);
 				}
@@ -512,25 +496,14 @@ public class PagamentiTelematiciCCPImpl implements PagamentiTelematiciCCP {
 						if(versamento.getStatoVersamento().equals(StatoVersamento.ANOMALO))
 							throw new NdpException(FaultPa.PAA_PAGAMENTO_DUPLICATO, codDominio, "Il pagamento risulta gi\u00E0 effettuato, ma si riscontrano anomalie negli importi. Per maggiori informazioni contattare il supporto clienti.");
 						
-						if(versamento.getStatoVersamento().equals(StatoVersamento.ESEGUITO_SENZA_RPT)) {
-							PagamentiBD pagamentiBD = new PagamentiBD(bd);
-							List<RendicontazioneSenzaRpt> pagamenti = pagamentiBD.getRendicontazioniSenzaRptBySingoloVersamento(versamento.getSingoliVersamenti(bd).get(0).getId());
-							if(pagamenti.isEmpty())
-								throw new NdpException(FaultPa.PAA_PAGAMENTO_DUPLICATO, codDominio);
-							else {
-								RendicontazioneSenzaRpt pagamento = pagamenti.get(0);
-								throw new NdpException(FaultPa.PAA_PAGAMENTO_DUPLICATO, codDominio, "Il pagamento risulta gi\u00E0 effettuato in data " + sdf.format(pagamento.getDataRendicontazione()) + " [Psp:" + pagamento.getFrApplicazione(bd).getFr(bd).getPsp(bd).getCodPsp() + " Iur:" + pagamento.getIur() + "]");
-							}
-						}
-						
-						if(versamento.getStatoVersamento().equals(StatoVersamento.ESEGUITO)) {
+						if(versamento.getStatoVersamento().equals(StatoVersamento.ESEGUITO) || versamento.getStatoVersamento().equals(StatoVersamento.ESEGUITO_SENZA_RPT)) {
 							PagamentiBD pagamentiBD = new PagamentiBD(bd);
 							List<Pagamento> pagamenti = pagamentiBD.getPagamentiBySingoloVersamento(versamento.getSingoliVersamenti(bd).get(0).getId());
 							if(pagamenti.isEmpty())
 								throw new NdpException(FaultPa.PAA_PAGAMENTO_DUPLICATO, codDominio);
 							else {
 								Pagamento pagamento = pagamenti.get(0);
-								throw new NdpException(FaultPa.PAA_PAGAMENTO_DUPLICATO, codDominio, "Il pagamento risulta gi\u00E0 effettuato in data " + sdf.format(pagamento.getDataPagamento()) + " [Psp:" + pagamento.getRpt(bd).getPsp(bd).getCodPsp() + " Iur:" + pagamento.getIur() + "]");
+								throw new NdpException(FaultPa.PAA_PAGAMENTO_DUPLICATO, codDominio, "Il pagamento risulta gi\u00E0 effettuato in data " + sdf.format(pagamento.getDataPagamento()) + " [Iur:" + pagamento.getIur() + "]");
 							}
 								
 						}
@@ -659,13 +632,16 @@ public class PagamentiTelematiciCCPImpl implements PagamentiTelematiciCCP {
 	}
 
 	private <T> T buildRisposta(Exception e, String codDominio, T risposta) {
-		log.error("Errore interno in verifica/attivazione RPT.", e);
-		return buildRisposta(new NdpException(FaultPa.PAA_SYSTEM_ERROR, codDominio), risposta);
+		return buildRisposta(new NdpException(FaultPa.PAA_SYSTEM_ERROR, codDominio, e.getMessage(), e), risposta);
 	}
 
 	private <T> T buildRisposta(NdpException e, T risposta) {
 		if(risposta instanceof PaaAttivaRPTRisposta) {
-			log.error("Rifiutata Attiva RPT con Fault " + e.getFault().toString() + ( e.getDescrizione() != null ? (": " + e.getDescrizione()) : ""));
+			if(e.getFault().equals(FaultPa.PAA_SYSTEM_ERROR)) {
+				log.error("Errore interno in Attiva RPT",e);
+			} else {
+				log.warn("Rifiutata Attiva RPT con Fault " + e.getFault().toString() + ( e.getDescrizione() != null ? (": " + e.getDescrizione()) : ""));
+			}
 			PaaAttivaRPTRisposta r = (PaaAttivaRPTRisposta) risposta;
 			EsitoAttivaRPT esito = new EsitoAttivaRPT();
 			esito.setEsito("KO");
@@ -679,7 +655,11 @@ public class PagamentiTelematiciCCPImpl implements PagamentiTelematiciCCP {
 		}
 
 		if(risposta instanceof PaaVerificaRPTRisposta) {
-			log.error("Rifiutata Verifica RPT con Fault " + e.getFault().toString() + ( e.getDescrizione() != null ? (": " + e.getDescrizione()) : ""));
+			if(e.getFault().equals(FaultPa.PAA_SYSTEM_ERROR)) {
+				log.error("Errore interno in Verifica RPT",e);
+			} else {
+				log.warn("Rifiutata Verifica RPT con Fault " + e.getFault().toString() + ( e.getDescrizione() != null ? (": " + e.getDescrizione()) : ""));
+			}
 			PaaVerificaRPTRisposta r = (PaaVerificaRPTRisposta) risposta;
 			EsitoVerificaRPT esito = new EsitoVerificaRPT();
 			esito.setEsito("KO");

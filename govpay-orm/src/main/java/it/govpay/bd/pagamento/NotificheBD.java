@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,8 +20,8 @@
 package it.govpay.bd.pagamento;
 
 import it.govpay.bd.BasicBD;
-import it.govpay.bd.model.converter.NotificaConverter;
 import it.govpay.bd.model.Notifica;
+import it.govpay.bd.model.converter.NotificaConverter;
 import it.govpay.model.Notifica.StatoSpedizione;
 import it.govpay.orm.dao.jdbc.JDBCNotificaService;
 
@@ -36,6 +35,7 @@ import org.openspcoop2.generic_project.exception.ExpressionNotImplementedExcepti
 import org.openspcoop2.generic_project.exception.NotFoundException;
 import org.openspcoop2.generic_project.exception.NotImplementedException;
 import org.openspcoop2.generic_project.exception.ServiceException;
+import org.openspcoop2.generic_project.expression.IExpression;
 import org.openspcoop2.generic_project.expression.IPaginatedExpression;
 
 public class NotificheBD extends BasicBD {
@@ -62,6 +62,35 @@ public class NotificheBD extends BasicBD {
 			exp.equals(it.govpay.orm.Notifica.model().STATO, Notifica.StatoSpedizione.DA_SPEDIRE.toString());
 			List<it.govpay.orm.Notifica> findAll = this.getNotificaService().findAll(exp);
 			return NotificaConverter.toDTOList(findAll);
+		} catch(NotImplementedException e) {
+			throw new ServiceException(e);
+		} catch (ExpressionNotImplementedException e) {
+			throw new ServiceException(e);
+		} catch (ExpressionException e) {
+			throw new ServiceException(e);
+		}
+	}
+
+	public long countNotificheDaSpedire() throws ServiceException {
+		try {
+			IExpression exp = this.getNotificaService().newExpression();
+			exp.lessThan(it.govpay.orm.Notifica.model().DATA_PROSSIMA_SPEDIZIONE, new Date());
+			exp.equals(it.govpay.orm.Notifica.model().STATO, Notifica.StatoSpedizione.DA_SPEDIRE.toString());
+			return this.getNotificaService().count(exp).longValue();
+		} catch(NotImplementedException e) {
+			throw new ServiceException(e);
+		} catch (ExpressionNotImplementedException e) {
+			throw new ServiceException(e);
+		} catch (ExpressionException e) {
+			throw new ServiceException(e);
+		}
+	}
+	
+	public long countNotificheInAttesa() throws ServiceException {
+		try {
+			IExpression exp = this.getNotificaService().newExpression();
+			exp.equals(it.govpay.orm.Notifica.model().STATO, Notifica.StatoSpedizione.DA_SPEDIRE.toString());
+			return this.getNotificaService().count(exp).longValue();
 		} catch(NotImplementedException e) {
 			throw new ServiceException(e);
 		} catch (ExpressionNotImplementedException e) {

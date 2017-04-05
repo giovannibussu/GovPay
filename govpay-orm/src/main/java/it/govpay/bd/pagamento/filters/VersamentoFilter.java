@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,6 +20,7 @@
 package it.govpay.bd.pagamento.filters;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -50,7 +50,9 @@ public class VersamentoFilter extends AbstractFilter {
 	private Date dataFine;
 	private List<Long> idVersamento= null;
 	private String codVersamento = null;
-
+	private List<String> codVersamentoEnte = null;
+	private List<Long> idApplicazione = null;
+	
 	public enum SortFields {
 		STATO_ASC, STATO_DESC, SCADENZA_ASC, SCADENZA_DESC, AGGIORNAMENTO_ASC, AGGIORNAMENTO_DESC, CARICAMENTO_ASC, CARICAMENTO_DESC
 	}
@@ -81,7 +83,7 @@ public class VersamentoFilter extends AbstractFilter {
 			if(this.codUnivocoDebitore != null) {
 				if(addAnd)
 					newExpression.and();
-				newExpression.equals(Versamento.model().DEBITORE_IDENTIFICATIVO, this.codUnivocoDebitore);
+				newExpression.ilike(Versamento.model().DEBITORE_IDENTIFICATIVO, this.codUnivocoDebitore,LikeMode.ANYWHERE);
 				addAnd = true;
 			}
 
@@ -94,7 +96,8 @@ public class VersamentoFilter extends AbstractFilter {
 				addAnd = true;
 			}
 
-			if(this.idDomini != null && !this.idDomini.isEmpty()){
+			if(this.idDomini != null){
+				idDomini.removeAll(Collections.singleton(null));
 				if(addAnd)
 					newExpression.and();
 				VersamentoFieldConverter converter = new VersamentoFieldConverter(ConnectionManager.getJDBCServiceManagerProperties().getDatabase()); 
@@ -103,12 +106,43 @@ public class VersamentoFilter extends AbstractFilter {
 				newExpression.isNotNull(Versamento.model().ID_UO.COD_UO); //Sempre not null, solo per forzare la join
 				addAnd = true;
 			}
+
 			if(this.codVersamento != null){
 				if(addAnd)
 					newExpression.and();
-				
+
 				newExpression.ilike(Versamento.model().COD_VERSAMENTO_ENTE, this.codVersamento, LikeMode.ANYWHERE);
 				addAnd = true;
+			}
+			
+			
+			if(this.idApplicazione!= null && this.idApplicazione.size() > 0 && this.codVersamentoEnte!= null && this.codVersamentoEnte.size() > 0) {
+				if(this.idApplicazione.size() == this.codVersamentoEnte.size()){
+					if(addAnd)
+						newExpression.and();
+
+					IExpression orExpr = this.newExpression();
+					List<IExpression> lstOrExpr = new ArrayList<IExpression>();
+					
+					VersamentoFieldConverter converter = new VersamentoFieldConverter(ConnectionManager.getJDBCServiceManagerProperties().getDatabase()); 
+					CustomField cf = new CustomField("id_applicazione", Long.class, "id_applicazione", converter.toTable(Versamento.model()));
+					
+					for (int i = 0; i < this.codVersamentoEnte.size(); i++) {
+						String codV = this.codVersamentoEnte.get(i);
+						Long idApp = this.idApplicazione.get(i);
+						
+						IExpression vExpr = this.newExpression();
+						vExpr.equals(Versamento.model().COD_VERSAMENTO_ENTE, codV).and().equals(cf, idApp);
+						
+						lstOrExpr.add(vExpr);
+					}
+					
+					orExpr.or(lstOrExpr.toArray(new IExpression[lstOrExpr.size()]));
+					
+					newExpression.and(orExpr);
+					
+					addAnd = true;
+				}
 			}
 			
 
@@ -131,49 +165,49 @@ public class VersamentoFilter extends AbstractFilter {
 
 	public void addSortField(SortFields field) {
 		FilterSortWrapper filterSortWrapper = new FilterSortWrapper();
-		
+
 		switch (field) {
 		case AGGIORNAMENTO_ASC:
 			filterSortWrapper.setField(Versamento.model().DATA_ORA_ULTIMO_AGGIORNAMENTO); 
 			filterSortWrapper.setSortOrder(SortOrder.ASC);
 			break;
-			
+
 		case AGGIORNAMENTO_DESC:
 			filterSortWrapper.setField(Versamento.model().DATA_ORA_ULTIMO_AGGIORNAMENTO); 
 			filterSortWrapper.setSortOrder(SortOrder.DESC);
 			break;
-					
+
 		case CARICAMENTO_ASC:
 			filterSortWrapper.setField(Versamento.model().DATA_CREAZIONE); 
 			filterSortWrapper.setSortOrder(SortOrder.ASC);
 			break;
-			
+
 		case CARICAMENTO_DESC:
 			filterSortWrapper.setField(Versamento.model().DATA_CREAZIONE); 
 			filterSortWrapper.setSortOrder(SortOrder.DESC);
 			break;
-			
+
 		case SCADENZA_ASC:
 			filterSortWrapper.setField(Versamento.model().DATA_SCADENZA); 
 			filterSortWrapper.setSortOrder(SortOrder.ASC);
 			break;
-			
+
 		case SCADENZA_DESC:
 			filterSortWrapper.setField(Versamento.model().DATA_SCADENZA); 
 			filterSortWrapper.setSortOrder(SortOrder.DESC);
 			break;
-			
+
 		case STATO_ASC:
 			filterSortWrapper.setField(Versamento.model().STATO_VERSAMENTO); 
 			filterSortWrapper.setSortOrder(SortOrder.ASC);
 			break;
-			
+
 		case STATO_DESC:
 			filterSortWrapper.setField(Versamento.model().STATO_VERSAMENTO); 
 			filterSortWrapper.setSortOrder(SortOrder.DESC);
 			break;
 		}
-		
+
 		this.filterSortList.add(filterSortWrapper);
 	}
 
@@ -221,5 +255,23 @@ public class VersamentoFilter extends AbstractFilter {
 		this.statiVersamento = new ArrayList<StatoVersamento>();
 		this.statiVersamento.add(stato);
 	}
+
+	public List<String> getCodVersamentoEnte() {
+		return codVersamentoEnte;
+	}
+
+	public void setCodVersamentoEnte(List<String> codVersamentoEnte) {
+		this.codVersamentoEnte = codVersamentoEnte;
+	}
+
+	public List<Long> getIdApplicazione() {
+		return idApplicazione;
+	}
+
+	public void setIdApplicazione(List<Long> idApplicazione) {
+		this.idApplicazione = idApplicazione;
+	}
+	
+	
 
 }

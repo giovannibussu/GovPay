@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,16 +19,20 @@
  */
 package it.govpay.core.utils;
 
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.openspcoop2.generic_project.exception.ServiceException;
 
 import it.govpay.bd.BasicBD;
 import it.govpay.model.Iuv;
+import it.govpay.bd.model.Fr;
 import it.govpay.bd.model.Pagamento;
+import it.govpay.bd.model.Psp;
 import it.govpay.bd.model.RendicontazionePagamento;
-import it.govpay.bd.model.RendicontazioneSenzaRpt;
 import it.govpay.bd.model.Rpt;
 import it.govpay.bd.model.Rr;
 import it.govpay.bd.model.Versamento;
@@ -51,6 +54,9 @@ import it.govpay.servizi.commons.Transazione;
 import it.govpay.servizi.commons.Pagamento.Allegato;
 import it.govpay.servizi.gpprt.GpChiediListaVersamentiResponse.Versamento.SpezzoneCausaleStrutturata;
 import it.govpay.servizi.gpprt.GpChiediStatoRichiestaStornoResponse.Storno;
+import it.govpay.servizi.gprnd.GpChiediListaFlussiRendicontazioneResponse;
+import it.govpay.servizi.gpprt.GpAvviaTransazionePagamentoResponse;
+import it.govpay.servizi.gpprt.GpChiediListaPspResponse;
 
 public class Gp21Utils {
 
@@ -82,7 +88,7 @@ public class Gp21Utils {
 			t.setStato(StatoTransazione.RPT_ACCETTATA_NODO);
 		}
 		for(Pagamento pagamento : rpt.getPagamenti(bd)) {
-			t.getPagamento().add(toPagamento(pagamento, versione));
+			t.getPagamento().add(toPagamento(pagamento, versione, bd));
 		}
 		return t;
 	}
@@ -111,11 +117,11 @@ public class Gp21Utils {
 			v.setCodDominio(versamento.getUo(bd).getDominio(bd).getCodDominio());
 			Iuv iuv = versamento.getIuv(bd);
 			if(iuv != null) {
-				IuvGenerato iuvGenerato = IuvUtils.toIuvGenerato(versamento.getApplicazione(bd), versamento.getUo(bd).getDominio(bd), iuv, versamento.getImportoTotale(), versione);
+				it.govpay.core.business.model.Iuv iuvGenerato = IuvUtils.toIuv(versamento.getApplicazione(bd), versamento.getUo(bd).getDominio(bd), iuv, versamento.getImportoTotale());
 				v.setIuv(iuv.getIuv());
 				v.setBarCode(iuvGenerato.getBarCode());
 				v.setQrCode(iuvGenerato.getQrCode());
-				if(versione.compareTo(Versione.GP_02_02_02) >=0) {
+				if(versione.compareTo(Versione.GP_02_03_00) >=0) {
 					v.setNumeroAvviso(iuvGenerato.getNumeroAvviso());
 				}
 			}
@@ -123,7 +129,7 @@ public class Gp21Utils {
 		return v;
 	}
 
-	public static it.govpay.servizi.commons.Pagamento toPagamento(Pagamento pagamento, Versionabile.Versione versione) {
+	public static it.govpay.servizi.commons.Pagamento toPagamento(Pagamento pagamento, Versionabile.Versione versione, BasicBD bd) throws ServiceException {
 		it.govpay.servizi.commons.Pagamento p = new it.govpay.servizi.commons.Pagamento();
 
 		if(pagamento.getAllegato() != null) {
@@ -132,7 +138,7 @@ public class Gp21Utils {
 			allegato.setTipo(TipoAllegato.valueOf(pagamento.getTipoAllegato().toString()));
 			p.setAllegato(allegato);
 		}
-		p.setCodSingoloVersamentoEnte(pagamento.getCodSingoloVersamentoEnte());
+		p.setCodSingoloVersamentoEnte(pagamento.getSingoloVersamento(bd).getCodSingoloVersamentoEnte());
 		p.setCommissioniPsp(pagamento.getCommissioniPsp());
 		p.setDataPagamento(pagamento.getDataPagamento());
 		p.setImportoPagato(pagamento.getImportoPagato());
@@ -149,36 +155,6 @@ public class Gp21Utils {
 		return p;
 	}
 
-	public static FlussoRendicontazione.Pagamento toRendicontazionePagamento(Pagamento pagamento, Versionabile.Versione versione, BasicBD bd) throws ServiceException {
-		FlussoRendicontazione.Pagamento p = new FlussoRendicontazione.Pagamento();
-		p.setCodSingoloVersamentoEnte(pagamento.getCodSingoloVersamentoEnte());
-		p.setImportoRendicontato(pagamento.getImportoPagato());
-		p.setIur(pagamento.getIur());
-		p.setEsitoRendicontazione(TipoRendicontazione.valueOf(pagamento.getEsitoRendicontazione().toString()));
-		p.setDataRendicontazione(pagamento.getDataRendicontazione());
-		if(versione.compareTo(Versione.GP_02_02_00) >= 0) {
-			p.setIuv(pagamento.getRpt(bd).getIuv());
-			p.setCodDominio(pagamento.getRpt(bd).getCodDominio());
-			p.setCodApplicazione(pagamento.getSingoloVersamento(bd).getVersamento(bd).getApplicazione(bd).getCodApplicazione());
-		}
-		return p;
-	}
-
-	public static FlussoRendicontazione.Pagamento toRendicontazionePagamento(RendicontazioneSenzaRpt rendicontazione, Versionabile.Versione versione, BasicBD bd) throws ServiceException {
-		FlussoRendicontazione.Pagamento p = new FlussoRendicontazione.Pagamento();
-		p.setCodSingoloVersamentoEnte(rendicontazione.getSingoloVersamento(bd).getCodSingoloVersamentoEnte());
-		p.setImportoRendicontato(rendicontazione.getImportoPagato());
-		p.setIur(rendicontazione.getIur());
-		p.setEsitoRendicontazione(TipoRendicontazione.ESEGUITO_SENZA_RPT);
-		p.setDataRendicontazione(rendicontazione.getDataRendicontazione());
-		if(versione.compareTo(Versione.GP_02_02_00) >= 0) {
-			p.setIuv(rendicontazione.getIuv(bd).getIuv());
-			p.setCodDominio(rendicontazione.getSingoloVersamento(bd).getVersamento(bd).getUo(bd).getDominio(bd).getCodDominio());
-			p.setCodApplicazione(rendicontazione.getSingoloVersamento(bd).getVersamento(bd).getApplicazione(bd).getCodApplicazione());
-		}
-		return p;
-	}
-
 	public static Storno toStorno(Rr rr, Versionabile.Versione versione, BasicBD bd) throws ServiceException {
 		Storno storno = new Storno();
 		storno.setCcp(rr.getCcp());
@@ -189,23 +165,50 @@ public class Gp21Utils {
 		storno.setRr(rr.getXmlRr());
 		storno.setStato(StatoRevoca.fromValue(rr.getStato().toString()));
 		for(Pagamento p : rr.getPagamenti(bd)) {
-			storno.getPagamento().add(toPagamento(p, versione));
+			storno.getPagamento().add(toPagamento(p, versione, bd));
 		}
 		return storno;
+	}
+	
+	public static FlussoRendicontazione toFr(Fr frModel, List<RendicontazionePagamento> rends, Versione versione, BasicBD bd) throws ServiceException {
+		
+		FlussoRendicontazione fr = new FlussoRendicontazione();
+		int annoFlusso = Integer.parseInt(simpleDateFormatAnno.format(frModel.getDataFlusso()));
+		fr.setAnnoRiferimento(annoFlusso);
+		fr.setCodBicRiversamento(frModel.getCodBicRiversamento());
+		fr.setCodFlusso(frModel.getCodFlusso());
+		fr.setCodPsp(frModel.getCodPsp());
+		fr.setDataFlusso(frModel.getDataFlusso());
+		fr.setDataRegolamento(frModel.getDataRegolamento());
+		fr.setImportoTotale(BigDecimal.ZERO);
+		fr.setNumeroPagamenti(0l);
+		fr.setIur(frModel.getIur());
+		
+		for(RendicontazionePagamento rend : rends) {
+			fr.setImportoTotale(rend.getPagamento().getImportoPagato().add(fr.getImportoTotale()));
+			fr.setNumeroPagamenti(fr.getNumeroPagamenti() + 1);
+			fr.getPagamento().add(Gp21Utils.toRendicontazionePagamento(rend, versione, bd));
+		}
+		
+		return fr;
 	}
 
 	public static it.govpay.servizi.commons.FlussoRendicontazione.Pagamento toRendicontazionePagamento(RendicontazionePagamento rend, Versione versione, BasicBD bd) throws ServiceException {
 		FlussoRendicontazione.Pagamento p = new FlussoRendicontazione.Pagamento();
-		p.setCodSingoloVersamentoEnte(rend.getPagamento().getCodSingoloVersamentoEnte());
-		p.setImportoRendicontato(rend.getPagamento().getImportoPagato());
-		p.setIur(rend.getPagamento().getIur());
-		p.setEsitoRendicontazione(TipoRendicontazione.valueOf(rend.getPagamento().getEsitoRendicontazione().toString()));
-		p.setDataRendicontazione(rend.getPagamento().getDataRendicontazione());
+		if(rend.getSingoloVersamento() != null)
+			p.setCodSingoloVersamentoEnte(rend.getSingoloVersamento().getCodSingoloVersamentoEnte());
+		
+		p.setImportoRendicontato(rend.getRendicontazione().getImporto().abs());
+		p.setIur(rend.getRendicontazione().getIur());
+		p.setEsitoRendicontazione(TipoRendicontazione.valueOf(rend.getRendicontazione().getEsito().toString()));
+		p.setDataRendicontazione(rend.getRendicontazione().getData());
 		if(versione.compareTo(Versione.GP_02_02_00) >= 0) {
-			p.setCodApplicazione(rend.getFrApplicazione().getApplicazione(bd).getCodApplicazione());
-			p.setIuv(rend.getRpt().getIuv());
-			p.setCodDominio(rend.getRpt().getCodDominio());
+			if(rend.getVersamento() != null)
+				p.setCodApplicazione(rend.getVersamento().getApplicazione(bd).getCodApplicazione());
+			p.setIuv(rend.getRendicontazione().getIuv());
+			p.setCodDominio(rend.getFr().getCodDominio());
 		}
+		
 		return p;
 	}
 
@@ -243,4 +246,129 @@ public class Gp21Utils {
 		return null;
 	}
 
+	public static SimpleDateFormat simpleDateFormatAnno = new SimpleDateFormat("yyyy");
+	public static it.govpay.servizi.gprnd.GpChiediListaFlussiRendicontazioneResponse.FlussoRendicontazione toFr(Fr frModel, BasicBD bd) {
+		GpChiediListaFlussiRendicontazioneResponse.FlussoRendicontazione efr = new GpChiediListaFlussiRendicontazioneResponse.FlussoRendicontazione();
+		int annoFlusso = Integer.parseInt(simpleDateFormatAnno.format(frModel.getDataFlusso()));
+		efr.setAnnoRiferimento(annoFlusso);
+		efr.setCodBicRiversamento(frModel.getCodBicRiversamento());
+		efr.setCodDominio(frModel.getCodDominio());
+		efr.setCodFlusso(frModel.getCodFlusso());
+		efr.setCodPsp(frModel.getCodPsp());
+		efr.setDataFlusso(frModel.getDataFlusso());
+		efr.setDataRegolamento(frModel.getDataRegolamento());
+		efr.setIur(frModel.getIur());
+		efr.setImportoTotale(frModel.getImportoTotalePagamenti());
+		efr.setNumeroPagamenti(frModel.getNumeroPagamenti());
+		return efr;
+	}
+	
+	
+	public static List<GpChiediListaPspResponse.Psp> toPsp(List<Psp> pspsModel) {
+		List<GpChiediListaPspResponse.Psp> psps = new ArrayList<GpChiediListaPspResponse.Psp>();
+		
+		for(it.govpay.bd.model.Psp pspModel : pspsModel) {
+			GpChiediListaPspResponse.Psp psp = new GpChiediListaPspResponse.Psp();
+			psp.setBollo(pspModel.isBolloGestito());
+			psp.setCodPsp(pspModel.getCodPsp());
+			psp.setLogo(PspUtils.getLogo160(pspModel.getCodPsp()));
+			psp.setRagioneSociale(pspModel.getRagioneSociale());
+			psp.setStorno(pspModel.isStornoGestito());
+			psp.setUrlInfo(pspModel.getUrlInfo());
+			for(it.govpay.bd.model.Canale canaleModel : pspModel.getCanalis()) {
+				GpChiediListaPspResponse.Psp.Canale canale = new GpChiediListaPspResponse.Psp.Canale();
+				canale.setCodCanale(canaleModel.getCodCanale());
+				canale.setCondizioni(canaleModel.getCondizioni());
+				canale.setDescrizione(canaleModel.getDescrizione());
+				canale.setDisponibilita(canaleModel.getDisponibilita());
+				canale.setLogoServizio(PspUtils.getLogo(canaleModel.getModelloPagamento()));
+				canale.setModelloPagamento(PspUtils.toWeb(canaleModel.getModelloPagamento()));
+				canale.setTipoVersamento(PspUtils.toWeb(canaleModel.getTipoVersamento()));
+				canale.setUrlInfo(canaleModel.getUrlInfo());
+				psp.getCanale().add(canale);
+			}
+			psps.add(psp);
+		}
+		return psps;
+	}
+
+	public static List<GpAvviaTransazionePagamentoResponse.RifTransazione> toRifTransazione(List<it.govpay.core.business.model.AvviaTransazioneDTOResponse.RifTransazione> rifTransazioniModel) {
+		List<GpAvviaTransazionePagamentoResponse.RifTransazione> rifTransazioni = new ArrayList<GpAvviaTransazionePagamentoResponse.RifTransazione>();
+
+		for(it.govpay.core.business.model.AvviaTransazioneDTOResponse.RifTransazione rifTransazioneModel : rifTransazioniModel) {
+			GpAvviaTransazionePagamentoResponse.RifTransazione rifTransazione = new GpAvviaTransazionePagamentoResponse.RifTransazione();
+			rifTransazione.setCcp(rifTransazioneModel.getCcp());
+			rifTransazione.setCodApplicazione(rifTransazioneModel.getCodApplicazione());
+			rifTransazione.setCodDominio(rifTransazioneModel.getCodDominio());
+			rifTransazione.setCodVersamentoEnte(rifTransazioneModel.getCodVersamentoEnte());
+			rifTransazione.setIuv(rifTransazioneModel.getIuv());
+			rifTransazioni.add(rifTransazione);
+		}
+
+		return rifTransazioni;
+	}
+
+	public static List<it.govpay.core.business.model.GeneraIuvDTO.IuvRichiesto> toIuvRichiesto(List<it.govpay.servizi.gpapp.GpGeneraIuv.IuvRichiesto> iuvRichiesti) {
+		List<it.govpay.core.business.model.GeneraIuvDTO.IuvRichiesto> iuvRichiestiModel = new ArrayList<it.govpay.core.business.model.GeneraIuvDTO.IuvRichiesto>();
+		for (it.govpay.servizi.gpapp.GpGeneraIuv.IuvRichiesto iuvRichiesto : iuvRichiesti) {
+			it.govpay.core.business.model.GeneraIuvDTO.IuvRichiesto iuvRichiestoModel = new it.govpay.core.business.model.GeneraIuvDTO.IuvRichiesto();
+			iuvRichiestoModel.setCodVersamentoEnte(iuvRichiesto.getCodVersamentoEnte());
+			iuvRichiestoModel.setImportoTotale(iuvRichiesto.getImportoTotale());
+			iuvRichiestiModel.add(iuvRichiestoModel);
+		}
+		return iuvRichiestiModel;
+	}
+	
+	public static List<it.govpay.core.business.model.CaricaIuvDTO.Iuv> toIuvDaCaricare(List<it.govpay.servizi.gpapp.GpCaricaIuv.IuvGenerato> iuvRichiesti) {
+		List<it.govpay.core.business.model.CaricaIuvDTO.Iuv> iuvRichiestiModel = new ArrayList<it.govpay.core.business.model.CaricaIuvDTO.Iuv>();
+		for (it.govpay.servizi.gpapp.GpCaricaIuv.IuvGenerato iuvRichiesto : iuvRichiesti) {
+			it.govpay.core.business.model.CaricaIuvDTO.Iuv iuvRichiestoModel = new it.govpay.core.business.model.CaricaIuvDTO.Iuv();
+			iuvRichiestoModel.setCodVersamentoEnte(iuvRichiesto.getCodVersamentoEnte());
+			iuvRichiestoModel.setImportoTotale(iuvRichiesto.getImportoTotale());
+			iuvRichiestoModel.setIuv(iuvRichiesto.getIuv());
+			iuvRichiestiModel.add(iuvRichiestoModel);
+		}
+		return iuvRichiestiModel;
+	}
+
+	public static List<IuvGenerato> toIuvGenerato(List<it.govpay.core.business.model.Iuv> iuvGeneratiModel, Versione versione) {
+		List<IuvGenerato> iuvGenerati = new ArrayList<IuvGenerato>();
+		for (it.govpay.core.business.model.Iuv iuvGeneratoModel : iuvGeneratiModel) {
+			iuvGenerati.add(toIuvGenerato(iuvGeneratoModel, versione));
+		}
+		return iuvGenerati;
+	}
+	
+	public static IuvGenerato toIuvGenerato(it.govpay.core.business.model.Iuv iuvGeneratoModel, Versione versione) {
+		IuvGenerato iuvGenerato = new IuvGenerato();
+		iuvGenerato.setBarCode(iuvGeneratoModel.getBarCode());
+		iuvGenerato.setCodApplicazione(iuvGeneratoModel.getCodApplicazione());
+		iuvGenerato.setCodDominio(iuvGeneratoModel.getCodDominio());
+		iuvGenerato.setCodVersamentoEnte(iuvGeneratoModel.getCodVersamentoEnte());
+		iuvGenerato.setIuv(iuvGeneratoModel.getIuv());
+		iuvGenerato.setQrCode(iuvGeneratoModel.getQrCode());
+		if(versione.compareTo(Versione.GP_02_03_00) >= 0) {
+			iuvGenerato.setNumeroAvviso(iuvGeneratoModel.getNumeroAvviso());
+		}
+		return iuvGenerato;
+	}
+
+	public static Collection<? extends IuvGenerato> toIuvCaricato(List<it.govpay.core.business.model.Iuv> iuvCaricatiModel, Versione versione) {
+		List<IuvGenerato> iuvCaricati = new ArrayList<IuvGenerato>();
+		for (it.govpay.core.business.model.Iuv iuvCaricatoModel : iuvCaricatiModel) {
+			IuvGenerato iuvCaricato = new IuvGenerato();
+			iuvCaricato.setBarCode(iuvCaricatoModel.getBarCode());
+			iuvCaricato.setCodApplicazione(iuvCaricatoModel.getCodApplicazione());
+			iuvCaricato.setCodDominio(iuvCaricatoModel.getCodDominio());
+			iuvCaricato.setCodVersamentoEnte(iuvCaricatoModel.getCodVersamentoEnte());
+			iuvCaricato.setIuv(iuvCaricatoModel.getIuv());
+			iuvCaricato.setQrCode(iuvCaricatoModel.getQrCode());
+			if(versione.compareTo(Versione.GP_02_03_00) >= 0) {
+				iuvCaricato.setNumeroAvviso(iuvCaricatoModel.getNumeroAvviso());
+			}
+			iuvCaricati.add(iuvCaricato);
+		}
+		return iuvCaricati;
+	}
+	
 }

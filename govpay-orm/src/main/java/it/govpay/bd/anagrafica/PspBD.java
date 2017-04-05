@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -135,6 +134,27 @@ public class PspBD extends BasicBD {
 		} catch (NotImplementedException e) {
 			throw new ServiceException(e);
 		}
+	}
+	
+	
+	public Psp getPspByCodUnivoco(String codUnivoco) throws NotFoundException, ServiceException, MultipleResultException{
+		try {
+
+			IPaginatedExpression exp = this.getCanaleService().newPaginatedExpression();
+			exp.equals(it.govpay.orm.Canale.model().COD_INTERMEDIARIO, codUnivoco);
+			List<it.govpay.orm.Canale> canaliVO = this.getCanaleService().findAll(exp);
+			if(canaliVO.size() == 0)
+				throw new NotFoundException();
+			
+			return getPsp(canaliVO.get(0).getIdPsp().getId());
+		} catch (NotImplementedException e) {
+			throw new ServiceException(e);
+		} catch (ExpressionException e) {
+			throw new ServiceException(e);
+		} catch (ExpressionNotImplementedException e) {
+			throw new ServiceException(e);
+		}
+		
 	}
 	
 	/**

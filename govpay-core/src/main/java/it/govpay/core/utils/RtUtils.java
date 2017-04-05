@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -196,7 +195,7 @@ public class RtUtils extends NdpValidationUtils {
 		if (esitoPagamento == Rpt.EsitoPagamento.DECORRENZA_TERMINI && rt.getImportoTotalePagato().compareTo(BigDecimal.ZERO) != 0)
 			esito.addErrore("ImportoTotalePagato [" + rt.getImportoTotalePagato().doubleValue() + "] diverso da 0 per un pagamento con esito 'Decorrenza temini'.", true);
 		if (esitoPagamento == Rpt.EsitoPagamento.PAGAMENTO_ESEGUITO && rt.getImportoTotalePagato().compareTo(rpt.getImportoTotaleDaVersare()) != 0)
-			esito.addErrore("ImportoTotalePagato [" + rt.getImportoTotalePagato().doubleValue() + "] diverso dall'ImportoTotaleDaVersare [" + rpt.getImportoTotaleDaVersare().doubleValue() + "] per un pagamento con esito 'Eseguito'", true);
+			esito.addErrore("Importo totale del pagamento [" + rt.getImportoTotalePagato().doubleValue() + "] diverso da quanto richiesto [" + rpt.getImportoTotaleDaVersare().doubleValue() + "]", false);
 	}
 
 	private static void validaSemanticaSingoloVersamento(CtDatiSingoloVersamentoRPT singoloVersamento, CtDatiSingoloPagamentoRT singoloPagamento, EsitoValidazione esito) {
@@ -211,7 +210,7 @@ public class RtUtils extends NdpValidationUtils {
 				esito.addErrore("IdentificativoUnivocoRiscossione deve essere n/a per pagamenti non eseguiti.", false);
 			}
 		} else if(singoloPagamento.getSingoloImportoPagato().compareTo(singoloVersamento.getImportoSingoloVersamento()) != 0) {
-			esito.addErrore("Importo di un pagamento eseguito [" + singoloPagamento.getSingoloImportoPagato().longValue() + "] non corrisponde a quanto indicato nella richiesta di pagamento [" + singoloVersamento.getImportoSingoloVersamento().longValue() + "]", true);
+			esito.addErrore("Importo di un pagamento [" + singoloPagamento.getSingoloImportoPagato().doubleValue() + "] diverso da quanto richiesto [" + singoloVersamento.getImportoSingoloVersamento().doubleValue() + "]", false);
 		}
 	}
 
@@ -269,11 +268,11 @@ public class RtUtils extends NdpValidationUtils {
 			try {
 				ctRt = JaxbUtils.toRT(rtByteValidato);
 			} catch (Exception e) {
-				log.error("Errore durante la validazione sintattica della Ricevuta Telematica.", e);
+				log.warn("Errore durante la validazione sintattica della Ricevuta Telematica.", e);
 				throw new NdpException(FaultPa.PAA_SINTASSI_XSD, codDominio, e.getCause().getMessage());
 			}
 		} catch (NdpException e) {
-			log.error("Rt rifiutata: " + e.getDescrizione());
+			log.warn("Rt rifiutata: " + e.getDescrizione());
 			rpt.setStato(StatoRpt.RT_RIFIUTATA_PA);
 			rpt.setDescrizioneStato(e.getDescrizione());
 			rpt.setXmlRt(rtByte);
@@ -353,8 +352,9 @@ public class RtUtils extends NdpValidationUtils {
 			pagamento.setSingoloVersamento(singoloVersamento);
 			pagamento.setImportoPagato(ctDatiSingoloPagamentoRT.getSingoloImportoPagato());
 			pagamento.setIur(ctDatiSingoloPagamentoRT.getIdentificativoUnivocoRiscossione());
-			pagamento.setCodSingoloVersamentoEnte(singoloVersamento.getCodSingoloVersamentoEnte());
 			pagamento.setIbanAccredito(ctDatiSingoloVersamentoRPT.getIbanAccredito());
+			pagamento.setCodDominio(rpt.getCodDominio());
+			pagamento.setIuv(rpt.getIuv());
 
 			if(ctDatiSingoloPagamentoRT.getAllegatoRicevuta() != null) {
 				pagamento.setTipoAllegato(Pagamento.TipoAllegato.valueOf(ctDatiSingoloPagamentoRT.getAllegatoRicevuta().getTipoAllegatoRicevuta().toString()));
@@ -398,8 +398,11 @@ public class RtUtils extends NdpValidationUtils {
 				if(!irregolare) {
 					versamento.setStatoVersamento(StatoVersamento.ESEGUITO);
 					versamentiBD.updateStatoVersamento(versamento.getId(), versamento.getStatoVersamento(), null);
-					break;
+				} else {
+					versamento.setStatoVersamento(StatoVersamento.ANOMALO);
+					versamentiBD.updateStatoVersamento(versamento.getId(), versamento.getStatoVersamento(), null);
 				}
+				break;
 			default:
 				versamento.setStatoVersamento(StatoVersamento.ANOMALO);
 				versamentiBD.updateStatoVersamento(versamento.getId(), versamento.getStatoVersamento(), null);
@@ -415,7 +418,9 @@ public class RtUtils extends NdpValidationUtils {
 				if(!irregolare) {
 					versamento.setStatoVersamento(StatoVersamento.PARZIALMENTE_ESEGUITO);
 					versamentiBD.updateStatoVersamento(versamento.getId(), versamento.getStatoVersamento(), null);
-					break;
+				} else {
+					versamento.setStatoVersamento(StatoVersamento.ANOMALO);
+					versamentiBD.updateStatoVersamento(versamento.getId(), versamento.getStatoVersamento(), null);
 				}
 			default:
 				versamento.setStatoVersamento(StatoVersamento.ANOMALO);

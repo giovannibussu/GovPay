@@ -56,11 +56,12 @@ public class GpContext {
 	public static final String TIPO_SOGGETTO_PRT = "PRT";
 	public static final String TIPO_SOGGETTO_STAZIONE = "STZ";
 	public static final String TIPO_SOGGETTO_GOVPAY = "GP";
+	
 	public static final String TIPO_SERVIZIO_GOVPAY = "GP";
 	public static final String TIPO_SERVIZIO_GOVPAY_RS = "GPRS";
 	public static final String TIPO_SERVIZIO_GOVPAY_JSON = "GPJSON";
 	public static final String TIPO_SERVIZIO_GOVPAY_WS = "GPWS";
-	public static final String TIPO_SERVIZIO_GOVPAY_BATCH = "GPB";
+	public static final String TIPO_SERVIZIO_GOVPAY_OPT = "GPO";
 	
 	
 	public GpContext(MessageContext msgCtx, String tipoServizio, int versioneServizio) throws ServiceException {
@@ -313,6 +314,19 @@ public class GpContext {
 			getContext().getTransaction().setResult(Result.PROCESSING_ERROR);
 			break;
 		}
+	}
+	
+	public void setResult(it.govpay.servizi.v2_3.commons.GpResponse response) {
+		if(response == null || response.getCodEsito() == null) {
+			getContext().getTransaction().setResult(Result.INTERNAL_ERROR);
+			return;
+		}
+		if(response.getCodEsito().equals("OK")) 
+			getContext().getTransaction().setResult(Result.SUCCESS);
+		else if(response.getCodEsito().equals("INTERNAL"))
+			getContext().getTransaction().setResult(Result.INTERNAL_ERROR);
+		else
+			getContext().getTransaction().setResult(Result.PROCESSING_ERROR);
 	}
 	
 	public void setResult(String faultCode) {

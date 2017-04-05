@@ -75,7 +75,6 @@ CREATE TABLE intermediari
 	cod_connettore_pdd VARCHAR2(35 CHAR) NOT NULL,
 	denominazione VARCHAR2(255 CHAR) NOT NULL,
 	abilitato NUMBER NOT NULL,
-	segregation_code NUMBER,
 	-- fk/pk columns
 	id NUMBER NOT NULL,
 	-- unique constraints
@@ -106,6 +105,10 @@ CREATE TABLE stazioni
 	password VARCHAR2(35 CHAR) NOT NULL,
 	abilitato NUMBER NOT NULL,
 	application_code NUMBER NOT NULL,
+	ndp_stato NUMBER,
+	ndp_operazione VARCHAR(256),
+	ndp_descrizione VARCHAR(1024),
+	ndp_data TIMESTAMP,
 	-- fk/pk columns
 	id NUMBER NOT NULL,
 	id_intermediario NUMBER NOT NULL,
@@ -184,6 +187,11 @@ CREATE TABLE domini
 	aux_digit NUMBER NOT NULL,
 	iuv_prefix VARCHAR2(255 CHAR),
 	iuv_prefix_strict NUMBER NOT NULL,
+	segregation_code NUMBER,
+	ndp_stato NUMBER,
+	ndp_operazione VARCHAR(256),
+	ndp_descrizione VARCHAR(1024),
+	ndp_data TIMESTAMP,
 	-- fk/pk columns
 	id NUMBER NOT NULL,
 	id_stazione NUMBER NOT NULL,
@@ -503,7 +511,7 @@ CREATE TABLE versamenti
 	data_creazione TIMESTAMP NOT NULL,
 	data_scadenza TIMESTAMP,
 	data_ora_ultimo_aggiornamento TIMESTAMP NOT NULL,
-	causale_versamento VARCHAR2(511 CHAR),
+	causale_versamento VARCHAR2(1024 CHAR),
 	debitore_identificativo VARCHAR2(35 CHAR) NOT NULL,
 	debitore_anagrafica VARCHAR2(70 CHAR) NOT NULL,
 	debitore_indirizzo VARCHAR2(70 CHAR),
@@ -512,7 +520,7 @@ CREATE TABLE versamenti
 	debitore_localita VARCHAR2(35 CHAR),
 	debitore_provincia VARCHAR2(35 CHAR),
 	debitore_nazione VARCHAR2(2 CHAR),
-	debitore_email VARCHAR2(255 CHAR),
+	debitore_email VARCHAR2(256 CHAR),
 	debitore_telefono VARCHAR2(35 CHAR),
 	debitore_cellulare VARCHAR2(35 CHAR),
 	debitore_fax VARCHAR2(35 CHAR),
@@ -744,6 +752,7 @@ CREATE TABLE iuv
 	data_generazione DATE NOT NULL,
 	tipo_iuv VARCHAR2(1 CHAR) NOT NULL,
 	cod_versamento_ente VARCHAR2(35 CHAR),
+	aux_digit NUMBER NOT NULL,
 	-- fk/pk columns
 	id NUMBER NOT NULL,
 	id_applicazione NUMBER NOT NULL,
@@ -776,11 +785,12 @@ CREATE SEQUENCE seq_fr MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 INCR
 
 CREATE TABLE fr
 (
+	cod_psp VARCHAR2(35 CHAR) NOT NULL,
+	cod_dominio VARCHAR2(35 CHAR) NOT NULL,
 	cod_flusso VARCHAR2(35 CHAR) NOT NULL,
 	stato VARCHAR2(35 CHAR) NOT NULL,
 	descrizione_stato CLOB,
 	iur VARCHAR2(35 CHAR) NOT NULL,
-	anno_riferimento NUMBER NOT NULL,
 	data_ora_flusso TIMESTAMP,
 	data_regolamento TIMESTAMP,
 	data_acquisizione TIMESTAMP NOT NULL,
@@ -790,13 +800,9 @@ CREATE TABLE fr
 	xml BLOB NOT NULL,
 	-- fk/pk columns
 	id NUMBER NOT NULL,
-	id_psp NUMBER NOT NULL,
-	id_dominio NUMBER NOT NULL,
 	-- unique constraints
-	CONSTRAINT unique_fr_1 UNIQUE (cod_flusso,anno_riferimento),
+	CONSTRAINT unique_fr_1 UNIQUE (cod_flusso),
 	-- fk/pk keys constraints
-	CONSTRAINT fk_fr_1 FOREIGN KEY (id_psp) REFERENCES psp(id) ON DELETE CASCADE,
-	CONSTRAINT fk_fr_2 FOREIGN KEY (id_dominio) REFERENCES domini(id) ON DELETE CASCADE,
 	CONSTRAINT pk_fr PRIMARY KEY (id)
 );
 
@@ -814,41 +820,12 @@ end;
 
 
 
-CREATE SEQUENCE seq_fr_applicazioni MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 INCREMENT BY 1 CACHE 2 NOCYCLE;
-
-CREATE TABLE fr_applicazioni
-(
-	numero_pagamenti NUMBER NOT NULL,
-	importo_totale_pagamenti BINARY_DOUBLE NOT NULL,
-	-- fk/pk columns
-	id NUMBER NOT NULL,
-	id_applicazione NUMBER NOT NULL,
-	id_fr NUMBER NOT NULL,
-	-- fk/pk keys constraints
-	CONSTRAINT fk_fr_applicazioni_1 FOREIGN KEY (id_applicazione) REFERENCES applicazioni(id) ON DELETE CASCADE,
-	CONSTRAINT fk_fr_applicazioni_2 FOREIGN KEY (id_fr) REFERENCES fr(id) ON DELETE CASCADE,
-	CONSTRAINT pk_fr_applicazioni PRIMARY KEY (id)
-);
-
-CREATE TRIGGER trg_fr_applicazioni
-BEFORE
-insert on fr_applicazioni
-for each row
-begin
-   IF (:new.id IS NULL) THEN
-      SELECT seq_fr_applicazioni.nextval INTO :new.id
-                FROM DUAL;
-   END IF;
-end;
-/
-
-
-
 CREATE SEQUENCE seq_pagamenti MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 INCREMENT BY 1 CACHE 2 NOCYCLE;
 
 CREATE TABLE pagamenti
 (
-	cod_singolo_versamento_ente VARCHAR2(35 CHAR) NOT NULL,
+	cod_dominio VARCHAR2(35 CHAR) NOT NULL,
+	iuv VARCHAR2(35 CHAR) NOT NULL,
 	importo_pagato BINARY_DOUBLE NOT NULL,
 	data_acquisizione TIMESTAMP NOT NULL,
 	iur VARCHAR2(35 CHAR) NOT NULL,
@@ -858,35 +835,21 @@ CREATE TABLE pagamenti
 	-- Valori possibili:\nES: Esito originario\nBD: Marca da Bollo
 	tipo_allegato VARCHAR2(2 CHAR),
 	allegato BLOB,
-	rendicontazione_esito NUMBER,
-	rendicontazione_data TIMESTAMP,
-	codflusso_rendicontazione VARCHAR2(35 CHAR),
-	anno_riferimento NUMBER,
-	indice_singolo_pagamento NUMBER,
 	data_acquisizione_revoca TIMESTAMP,
 	causale_revoca VARCHAR2(140 CHAR),
 	dati_revoca VARCHAR2(140 CHAR),
 	importo_revocato BINARY_DOUBLE,
 	esito_revoca VARCHAR2(140 CHAR),
 	dati_esito_revoca VARCHAR2(140 CHAR),
-	rendicontazione_esito_revoca NUMBER,
-	rendicontazione_data_revoca TIMESTAMP,
-	cod_flusso_rendicontaz_revoca VARCHAR2(35 CHAR),
-	anno_riferimento_revoca NUMBER,
-	ind_singolo_pagamento_revoca NUMBER,
 	-- fk/pk columns
 	id NUMBER NOT NULL,
 	id_rpt NUMBER,
 	id_singolo_versamento NUMBER NOT NULL,
-	id_fr_applicazione NUMBER,
 	id_rr NUMBER,
-	id_fr_applicazione_revoca NUMBER,
 	-- fk/pk keys constraints
 	CONSTRAINT fk_pagamenti_1 FOREIGN KEY (id_rpt) REFERENCES rpt(id) ON DELETE CASCADE,
 	CONSTRAINT fk_pagamenti_2 FOREIGN KEY (id_singolo_versamento) REFERENCES singoli_versamenti(id) ON DELETE CASCADE,
-	CONSTRAINT fk_pagamenti_3 FOREIGN KEY (id_fr_applicazione) REFERENCES fr_applicazioni(id) ON DELETE CASCADE,
-	CONSTRAINT fk_pagamenti_4 FOREIGN KEY (id_rr) REFERENCES rr(id) ON DELETE CASCADE,
-	CONSTRAINT fk_pagamenti_5 FOREIGN KEY (id_fr_applicazione_revoca) REFERENCES fr_applicazioni(id) ON DELETE CASCADE,
+	CONSTRAINT fk_pagamenti_3 FOREIGN KEY (id_rr) REFERENCES rr(id) ON DELETE CASCADE,
 	CONSTRAINT pk_pagamenti PRIMARY KEY (id)
 );
 
@@ -904,26 +867,61 @@ end;
 
 
 
+CREATE SEQUENCE seq_rendicontazioni MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 INCREMENT BY 1 CACHE 2 NOCYCLE;
+
+CREATE TABLE rendicontazioni
+(
+	iuv VARCHAR2(35 CHAR) NOT NULL,
+	iur VARCHAR2(35 CHAR) NOT NULL,
+	importo_pagato BINARY_DOUBLE,
+	esito NUMBER,
+	data TIMESTAMP,
+	stato VARCHAR2(35 CHAR) NOT NULL,
+	anomalie CLOB,
+	-- fk/pk columns
+	id NUMBER NOT NULL,
+	id_fr NUMBER NOT NULL,
+	id_pagamento NUMBER,
+	-- fk/pk keys constraints
+	CONSTRAINT fk_rendicontazioni_1 FOREIGN KEY (id_fr) REFERENCES fr(id) ON DELETE CASCADE,
+	CONSTRAINT fk_rendicontazioni_2 FOREIGN KEY (id_pagamento) REFERENCES pagamenti(id) ON DELETE CASCADE,
+	CONSTRAINT pk_rendicontazioni PRIMARY KEY (id)
+);
+
+CREATE TRIGGER trg_rendicontazioni
+BEFORE
+insert on rendicontazioni
+for each row
+begin
+   IF (:new.id IS NULL) THEN
+      SELECT seq_rendicontazioni.nextval INTO :new.id
+                FROM DUAL;
+   END IF;
+end;
+/
+
+
+
 CREATE SEQUENCE seq_eventi MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 INCREMENT BY 1 CACHE 2 NOCYCLE;
 
 CREATE TABLE eventi
 (
-	cod_dominio VARCHAR2(35 CHAR),
-	iuv VARCHAR2(35 CHAR),
-	ccp VARCHAR2(35 CHAR),
-	cod_psp VARCHAR2(35 CHAR),
-	tipo_versamento VARCHAR2(10 CHAR),
-	componente VARCHAR2(4 CHAR),
-	categoria_evento VARCHAR2(1 CHAR),
-	tipo_evento VARCHAR2(35 CHAR),
-	sottotipo_evento VARCHAR2(35 CHAR),
-	erogatore VARCHAR2(35 CHAR),
-	fruitore VARCHAR2(35 CHAR),
-	cod_stazione VARCHAR2(35 CHAR),
-	cod_canale VARCHAR2(35 CHAR),
-	parametri_1 VARCHAR2(512 CHAR),
-	parametri_2 VARCHAR2(512 CHAR),
-	esito VARCHAR2(35 CHAR),
+	cod_dominio VARCHAR2(35),
+	iuv VARCHAR2(35),
+	ccp VARCHAR2(35),
+	cod_psp VARCHAR2(35),
+	tipo_versamento VARCHAR2(10),
+	componente VARCHAR2(4),
+	categoria_evento VARCHAR2(1),
+	tipo_evento VARCHAR2(35),
+	sottotipo_evento VARCHAR2(35),
+	erogatore VARCHAR2(35),
+	fruitore VARCHAR2(35),
+	cod_stazione VARCHAR2(35),
+	cod_canale VARCHAR2(35),
+	parametri_1 VARCHAR2(512),
+	parametri_2 VARCHAR2(512),
+	esito VARCHAR2(35),
 	data_1 TIMESTAMP,
 	data_2 TIMESTAMP,
 	-- fk/pk columns
@@ -946,32 +944,29 @@ end;
 
 
 
-CREATE SEQUENCE seq_rendicontazioni_senza_rpt MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 INCREMENT BY 1 CACHE 2 NOCYCLE;
+CREATE SEQUENCE seq_batch MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 INCREMENT BY 1 CACHE 2 NOCYCLE;
 
-CREATE TABLE rendicontazioni_senza_rpt
+CREATE TABLE batch
 (
-	importo_pagato BINARY_DOUBLE NOT NULL,
-	iur VARCHAR2(35 CHAR) NOT NULL,
-	rendicontazione_data DATE NOT NULL,
+	cod_batch VARCHAR2(255 CHAR) NOT NULL,
+	nodo NUMBER,
+	inizio TIMESTAMP,
+	aggiornamento TIMESTAMP,
 	-- fk/pk columns
 	id NUMBER NOT NULL,
-	id_fr_applicazione NUMBER NOT NULL,
-	id_iuv NUMBER NOT NULL,
-	id_singolo_versamento NUMBER,
+	-- unique constraints
+	CONSTRAINT unique_batch_1 UNIQUE (cod_batch),
 	-- fk/pk keys constraints
-	CONSTRAINT fk_rendicontazioni_senza_rpt_1 FOREIGN KEY (id_fr_applicazione) REFERENCES fr_applicazioni(id) ON DELETE CASCADE,
-	CONSTRAINT fk_rendicontazioni_senza_rpt_2 FOREIGN KEY (id_iuv) REFERENCES iuv(id) ON DELETE CASCADE,
-	CONSTRAINT fk_rendicontazioni_senza_rpt_3 FOREIGN KEY (id_singolo_versamento) REFERENCES singoli_versamenti(id) ON DELETE CASCADE,
-	CONSTRAINT pk_rendicontazioni_senza_rpt PRIMARY KEY (id)
+	CONSTRAINT pk_batch PRIMARY KEY (id)
 );
 
-CREATE TRIGGER trg_rendicontazioni_senza_rpt
+CREATE TRIGGER trg_batch
 BEFORE
-insert on rendicontazioni_senza_rpt
+insert on batch
 for each row
 begin
    IF (:new.id IS NULL) THEN
-      SELECT seq_rendicontazioni_senza_rpt.nextval INTO :new.id
+      SELECT seq_batch.nextval INTO :new.id
                 FROM DUAL;
    END IF;
 end;
@@ -993,3 +988,19 @@ CREATE TABLE ID_MESSAGGIO_RELATIVO
 
 ALTER TABLE ID_MESSAGGIO_RELATIVO MODIFY ora_registrazione DEFAULT CURRENT_TIMESTAMP;
 
+CREATE TABLE sonde
+(
+	nome VARCHAR(35) NOT NULL,
+	classe VARCHAR(255) NOT NULL,
+	soglia_warn NUMBER NOT NULL,
+	soglia_error NUMBER NOT NULL,
+	data_ok TIMESTAMP,
+	data_warn TIMESTAMP,
+	data_error TIMESTAMP,
+	data_ultimo_check TIMESTAMP,
+	dati_check CLOB,
+	stato_ultimo_check NUMBER,
+	-- fk/pk columns
+	-- fk/pk keys constraints
+	CONSTRAINT pk_sonde PRIMARY KEY (nome)
+);

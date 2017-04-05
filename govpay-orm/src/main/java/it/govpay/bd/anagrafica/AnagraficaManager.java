@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -612,9 +611,28 @@ public class AnagraficaManager {
 			throw new ServiceException(t);
 		}
 	}
-
-
-
+	
+	
+	public static Psp getPspByCodUnivoco(BasicBD basicBD, String codUnivoco) throws ServiceException, NotFoundException {
+		try {
+			String method = "getPspByCodUnivoco";
+			Object psp = pspBDCacheWrapper.getObjectCache(basicBD, DEBUG, codUnivoco, method, codUnivoco);
+			return (Psp) psp;
+		} catch (Throwable t) {
+			if(t instanceof NotFoundException) {
+				throw (NotFoundException) t;
+			}
+			if(t instanceof MultipleResultException) {
+				throw new ServiceException(t);
+			}
+			if(t instanceof ServiceException) {
+				throw (ServiceException) t;
+			}
+			throw new ServiceException(t);
+		}
+	}
+	
+	
 	public static Stazione getStazione(BasicBD basicBD, long id) throws ServiceException {
 		try {
 			String method = "getStazione";
@@ -742,10 +760,14 @@ public class AnagraficaManager {
 		intermediariBDCacheWrapper.resetCache();
 		operatoriBDCacheWrapper.resetCache();
 		portaliBDCacheWrapper.resetCache();
-		pspBDCacheWrapper.resetCache();
 		stazioniBDCacheWrapper.resetCache();
 		tributiBDCacheWrapper.resetCache();
 		tipiTributoBDCacheWrapper.resetCache();
+		cleanPspCache();
+	}
+
+	public static void cleanPspCache() throws UtilsException {
+		pspBDCacheWrapper.resetCache();
 		canaliBDCacheWrapper.resetCache();
 	}
 }

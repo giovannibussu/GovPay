@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,7 +19,9 @@
  */
 package it.govpay.core.business;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -332,6 +333,14 @@ public class Versamento extends BasicBD {
 		filter.setCodUnivocoDebitore(codUnivocoDebitore);
 		filter.setStatiPagamento(statiVersamento);
 		filter.addSortField(filterSortList);
+		
+		List<Long> domini = new ArrayList<Long>();
+		Set<Long> dominiSet = AclEngine.getAuthorizedPagamenti(portaleAutenticato);
+		if(dominiSet != null) {
+			domini.addAll(dominiSet);
+			filter.setIdDomini(domini);
+		}
+		
 		List<it.govpay.bd.model.Versamento> versamenti = versamentiBD.findAll(filter);
 		for(it.govpay.bd.model.Versamento versamento : versamenti)
 			try {
@@ -339,6 +348,6 @@ public class Versamento extends BasicBD {
 			} catch (Exception e) {
 				// Aggiornamento andato male. risultera' scaduto.
 			} 
-		return versamentiBD.findAll(filter);
+		return versamenti;
 	}
 }

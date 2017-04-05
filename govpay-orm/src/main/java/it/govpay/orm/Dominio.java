@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -49,6 +48,11 @@ import java.io.Serializable;
  * 			&lt;element name="auxDigit" type="{http://www.govpay.it/orm}int" minOccurs="1" maxOccurs="1" default="0"/>
  * 			&lt;element name="iuvPrefix" type="{http://www.govpay.it/orm}string" minOccurs="0" maxOccurs="1"/>
  * 			&lt;element name="iuvPrefixStrict" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="1" maxOccurs="1" default="false"/>
+ * 			&lt;element name="segregationCode" type="{http://www.govpay.it/orm}integer" minOccurs="0" maxOccurs="1"/>
+ * 			&lt;element name="ndpStato" type="{http://www.w3.org/2001/XMLSchema}positiveInteger" minOccurs="0" maxOccurs="1"/>
+ * 			&lt;element name="ndpOperazione" type="{http://www.govpay.it/orm}string" minOccurs="0" maxOccurs="1"/>
+ * 			&lt;element name="ndpDescrizione" type="{http://www.govpay.it/orm}string" minOccurs="0" maxOccurs="1"/>
+ * 			&lt;element name="ndpData" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0" maxOccurs="1"/>
  * 		&lt;/sequence>
  * &lt;/complexType>
  * </pre>
@@ -75,7 +79,12 @@ import java.io.Serializable;
   	"idApplicazioneDefault",
   	"_decimalWrapper_auxDigit",
   	"iuvPrefix",
-  	"iuvPrefixStrict"
+  	"iuvPrefixStrict",
+  	"_decimalWrapper_segregationCode",
+  	"ndpStato",
+  	"ndpOperazione",
+  	"ndpDescrizione",
+  	"ndpData"
   }
 )
 
@@ -219,6 +228,52 @@ public class Dominio extends org.openspcoop2.utils.beans.BaseBean implements Ser
     this.iuvPrefixStrict = iuvPrefixStrict;
   }
 
+  public java.lang.Integer getSegregationCode() {
+    if(this._decimalWrapper_segregationCode!=null){
+		return (java.lang.Integer) this._decimalWrapper_segregationCode.getObject(java.lang.Integer.class);
+	}else{
+		return this.segregationCode;
+	}
+  }
+
+  public void setSegregationCode(java.lang.Integer segregationCode) {
+    if(segregationCode!=null){
+		this._decimalWrapper_segregationCode = new org.openspcoop2.utils.jaxb.DecimalWrapper(1,2,segregationCode);
+	}
+  }
+
+  public java.lang.Integer getNdpStato() {
+    return this.ndpStato;
+  }
+
+  public void setNdpStato(java.lang.Integer ndpStato) {
+    this.ndpStato = ndpStato;
+  }
+
+  public java.lang.String getNdpOperazione() {
+    return this.ndpOperazione;
+  }
+
+  public void setNdpOperazione(java.lang.String ndpOperazione) {
+    this.ndpOperazione = ndpOperazione;
+  }
+
+  public java.lang.String getNdpDescrizione() {
+    return this.ndpDescrizione;
+  }
+
+  public void setNdpDescrizione(java.lang.String ndpDescrizione) {
+    this.ndpDescrizione = ndpDescrizione;
+  }
+
+  public java.util.Date getNdpData() {
+    return this.ndpData;
+  }
+
+  public void setNdpData(java.util.Date ndpData) {
+    this.ndpData = ndpData;
+  }
+
   private static final long serialVersionUID = 1L;
 
   @XmlTransient
@@ -291,5 +346,30 @@ public class Dominio extends org.openspcoop2.utils.beans.BaseBean implements Ser
   @javax.xml.bind.annotation.XmlSchemaType(name="boolean")
   @XmlElement(name="iuvPrefixStrict",required=true,nillable=false,defaultValue="false")
   protected boolean iuvPrefixStrict = false;
+
+  @javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter(org.openspcoop2.utils.jaxb.Decimal2String.class)
+  @javax.xml.bind.annotation.XmlSchemaType(name="integer")
+  @XmlElement(name="segregationCode",required=false,nillable=false)
+  org.openspcoop2.utils.jaxb.DecimalWrapper _decimalWrapper_segregationCode = null;
+
+  @XmlTransient
+  protected java.lang.Integer segregationCode;
+
+  @javax.xml.bind.annotation.XmlSchemaType(name="positiveInteger")
+  @XmlElement(name="ndpStato",required=false,nillable=false)
+  protected java.lang.Integer ndpStato;
+
+  @javax.xml.bind.annotation.XmlSchemaType(name="string")
+  @XmlElement(name="ndpOperazione",required=false,nillable=false)
+  protected java.lang.String ndpOperazione;
+
+  @javax.xml.bind.annotation.XmlSchemaType(name="string")
+  @XmlElement(name="ndpDescrizione",required=false,nillable=false)
+  protected java.lang.String ndpDescrizione;
+
+  @javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter(org.openspcoop2.utils.jaxb.DateTime2String.class)
+  @javax.xml.bind.annotation.XmlSchemaType(name="dateTime")
+  @XmlElement(name="ndpData",required=false,nillable=false,type=java.lang.String.class)
+  protected java.util.Date ndpData;
 
 }

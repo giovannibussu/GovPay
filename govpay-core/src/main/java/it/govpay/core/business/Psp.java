@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -42,21 +41,16 @@ import it.gov.digitpa.schemas._2011.psp.ObjectFactory;
 import it.gov.digitpa.schemas._2011.ws.paa.NodoChiediInformativaPSP;
 import it.gov.digitpa.schemas._2011.ws.paa.NodoChiediInformativaPSPRisposta;
 import it.govpay.bd.BasicBD;
-import it.govpay.bd.anagrafica.DominiBD;
 import it.govpay.bd.anagrafica.PspBD;
+import it.govpay.bd.anagrafica.StazioniBD;
 import it.govpay.servizi.commons.EsitoOperazione;
-import it.govpay.servizi.gpprt.GpChiediListaPspResponse;
 import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
-import it.govpay.core.utils.NdpUtils;
-import it.govpay.core.utils.PspUtils;
 import it.govpay.core.utils.client.NodoClient;
 import it.govpay.core.utils.client.NodoClient.Azione;
 import it.govpay.bd.model.Canale;
-import it.govpay.bd.model.Dominio;
 import it.govpay.model.Intermediario;
-import it.govpay.model.Portale;
 import it.govpay.bd.model.Stazione;
 
 public class Psp extends BasicBD {
@@ -67,35 +61,11 @@ public class Psp extends BasicBD {
 		super(basicBD);
 	}
 
-	public GpChiediListaPspResponse chiediListaPsp(Portale portaleAutenticato) throws ServiceException {
+	public List<it.govpay.bd.model.Psp> chiediListaPsp() throws ServiceException {
 
 		PspBD pspBD = new PspBD(this);
 		List<it.govpay.bd.model.Psp> psps = pspBD.getPsp(true);
-
-		GpChiediListaPspResponse response = new GpChiediListaPspResponse();
-		for(it.govpay.bd.model.Psp pspModel : psps) {
-			GpChiediListaPspResponse.Psp psp = new GpChiediListaPspResponse.Psp();
-			psp.setBollo(pspModel.isBolloGestito());
-			psp.setCodPsp(pspModel.getCodPsp());
-			psp.setLogo(PspUtils.getLogo160(pspModel.getCodPsp()));
-			psp.setRagioneSociale(pspModel.getRagioneSociale());
-			psp.setStorno(pspModel.isStornoGestito());
-			psp.setUrlInfo(pspModel.getUrlInfo());
-			for(it.govpay.bd.model.Canale canaleModel : pspModel.getCanalis()) {
-				GpChiediListaPspResponse.Psp.Canale canale = new GpChiediListaPspResponse.Psp.Canale();
-				canale.setCodCanale(canaleModel.getCodCanale());
-				canale.setCondizioni(canaleModel.getCondizioni());
-				canale.setDescrizione(canaleModel.getDescrizione());
-				canale.setDisponibilita(canaleModel.getDisponibilita());
-				canale.setLogoServizio(PspUtils.getLogo(canaleModel.getModelloPagamento()));
-				canale.setModelloPagamento(PspUtils.toWeb(canaleModel.getModelloPagamento()));
-				canale.setTipoVersamento(PspUtils.toWeb(canaleModel.getTipoVersamento()));
-				canale.setUrlInfo(canaleModel.getUrlInfo());
-				psp.getCanale().add(canale);
-			}
-			response.getPsp().add(psp);
-		}
-		return response;
+		return psps;
 	}
 
 
@@ -107,51 +77,50 @@ public class Psp extends BasicBD {
 		log.info("Aggiornamento del Registro PSP");
 		ctx.log("psp.aggiornamentoPsp");
 		boolean acquisizioneOk = false;
-		String lastError = "[-- No exception found --]";
+		Throwable lastError = null;
 		String transactionId = null;
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
 
-			DominiBD dominiBD = new DominiBD(this);
-			List<Dominio> domini = dominiBD.getDomini();
-
-			if(domini.size() == 0) {
-				log.warn("Nessun dominio registrato. Impossibile richiedere il catalogo dei Psp.");
+			
+			StazioniBD stazioniBD = new StazioniBD(this);
+			List<Stazione> lstStazioni = stazioniBD.getStazioni();
+			
+			if(lstStazioni.size() == 0) {
+				log.warn("Nessuna stazione registrata. Impossibile richiedere il catalogo dei Psp.");
 				ctx.log("psp.aggiornamentoPspNoDomini");
-				throw new GovPayException("Nessun dominio registrato. Impossibile richiedere il catalogo dei Psp.", EsitoOperazione.INTERNAL, "Impossibile aggiornare la lista dei Psp.");
+				throw new GovPayException(EsitoOperazione.INTERNAL, "Nessuna stazione registrata. Impossibile richiedere il catalogo dei Psp.");
 			}
-			// Finche' non ricevo un catalogo di informativa, provo per tutti i domini.
+			
+			// Finche' non ricevo un catalogo di informativa, provo per tutte le stazioni.
 			ListaInformativePSP informativePsp = null;
 
-			for(Dominio dominio : domini) {
+			for(Stazione stazione : lstStazioni) {
 
-				log.info("Richiedo catalogo per il dominio " + dominio.getCodDominio());
-				Stazione stazione = dominio.getStazione(this);
+				log.info("Richiedo catalogo per la stazione " + stazione.getCodStazione());
 				Intermediario intermediario = stazione.getIntermediario(this);
 
 				transactionId = ctx.openTransaction();
-				ctx.getContext().getRequest().addGenericProperty(new Property("codDominio", dominio.getCodDominio()));
 				ctx.getContext().getRequest().addGenericProperty(new Property("codStazione", stazione.getCodStazione()));
-				ctx.setupNodoClient(stazione.getCodStazione(), dominio.getCodDominio(), Azione.nodoChiediInformativaPSP);
+				ctx.setupNodoClient(stazione.getCodStazione(), null, Azione.nodoChiediInformativaPSP);
 				ctx.log("psp.aggiornamentoPspRichiesta");
 
 				closeConnection();
 
 				NodoChiediInformativaPSP richiesta = new NodoChiediInformativaPSP();
-				richiesta.setIdentificativoDominio(dominio.getCodDominio());
 				richiesta.setIdentificativoIntermediarioPA(intermediario.getCodIntermediario());
 				richiesta.setIdentificativoStazioneIntermediarioPA(stazione.getCodStazione());
 				richiesta.setPassword(stazione.getPassword());
 
 				try {
-
+					NodoClient client = null;
 					try { 
-						NodoClient client = new NodoClient(intermediario);
+						client = new NodoClient(intermediario, this);
 
 						NodoChiediInformativaPSPRisposta risposta = client.nodoChiediInformativaPSP(richiesta, intermediario.getDenominazione());
 
 						if(risposta.getFault() != null) {
-							throw new GovPayException(NdpUtils.toCausaString(risposta.getFault()), EsitoOperazione.NDP_001, "Ricevuto errore dal Nodo dei Pagamenti durante l'acquisizione della Informativa Psp per il dominio " + dominio.getCodDominio());
+							throw new GovPayException(risposta.getFault());
 						}
 
 						DataHandler dh= risposta.getXmlInformativa();
@@ -165,7 +134,7 @@ public class Psp extends BasicBD {
 					}
 
 					if(informativePsp == null) {
-						log.error("Catalogo dei psp non acquisito. Impossibile aggiornare il registro.");
+						log.warn("Catalogo dei psp non acquisito. Impossibile aggiornare il registro.");
 						ctx.log("psp.aggiornamentoPspRichiestaKo", "Ricevuta Informativa PSP vuota.");
 						throw new GovPayException("Ricevuta Informativa PSP vuota.", EsitoOperazione.INTERNAL, "Impossibile aggiornare la lista dei Psp.");
 					}
@@ -224,7 +193,7 @@ public class Psp extends BasicBD {
 
 								// Il psp e' nel catalogo, va aggiornato. 
 								// Rimuovo la versione aggiornata dal catalogo e lo mando in update
-								log.info("Aggiornamento [codPsp: " + psp.getCodPsp() + "]");
+								log.debug("Aggiornamento [codPsp: " + psp.getCodPsp() + "]");
 								ctx.log("psp.aggiornamentoPspAggiornatoPSP", psp.getCodPsp(), psp.getRagioneSociale());
 								response.add(psp.getRagioneSociale() + " (" + psp.getCodPsp() + ")#Acquisita versione aggiornata.");
 								pspBD.updatePsp(catalogoPsp.get(i));
@@ -261,9 +230,9 @@ public class Psp extends BasicBD {
 					acquisizioneOk = true;
 					break;
 				} catch (Exception e) {
-					log.error("Errore di acquisizione del Catalogo dati Informativi [codIntermediario: " + intermediario.getCodIntermediario() + "][codStazione: " + stazione.getCodStazione() + "][codDominio:" + dominio.getCodDominio() + "]", e);
+					log.warn("Errore di acquisizione del Catalogo dati Informativi [Intermediario:" + intermediario.getCodIntermediario() + " Stazione:" + stazione.getCodStazione() + "]", e);
 					ctx.log("psp.aggiornamentoPspRichiestaKo", e.getMessage());
-					lastError = e.getMessage();
+					lastError = e;
 					continue;
 				} finally {
 					ctx.closeTransaction(transactionId);
@@ -278,17 +247,17 @@ public class Psp extends BasicBD {
 					return StringUtils.join(response,"|");
 				}
 			} else {
-				ctx.log("psp.aggiornamentoPspKo", lastError);
-				return "Acquisizione fallita#Riscontrato errore:" + lastError;
+				log.error("Impossibile aggiornare la lista dei Psp.", lastError);
+				ctx.log("psp.aggiornamentoPspKo", lastError == null ? "[-- No exception found --]" : lastError.getMessage());
+				return "Acquisizione fallita#Riscontrato errore:" + lastError.getMessage();
 			}
 		} catch (Throwable se) {
 			rollback();
 			ctx.log("psp.aggiornamentoPspKo", se.getMessage());
+			log.error("Impossibile aggiornare la lista dei Psp.", se);
 			throw new GovPayException(se, "Impossibile aggiornare la lista dei Psp.");
 		} finally {
-			closeConnection();
 			ctx.closeTransaction(transactionId);
 		}
 	}
-
 }

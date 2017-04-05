@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -183,6 +182,7 @@ public class PagamentiTelematiciRTImpl implements PagamentiTelematiciRT {
 		} finally {
 			try{
 				if(bd != null) {
+					bd.setAutoCommit(true);
 					GiornaleEventi ge = new GiornaleEventi(bd);
 					evento.setEsito(response.getEsito());
 					evento.setDataRisposta(new Date());
@@ -245,7 +245,7 @@ public class PagamentiTelematiciRTImpl implements PagamentiTelematiciRT {
 			bd = BasicBD.newInstance(GpThreadLocal.get().getTransactionId());
 
 			String principal = getPrincipal();
-			if(principal == null) {
+			if(GovpayConfig.getInstance().isPddAuthEnable() && principal == null) {
 				ctx.log("rt.erroreNoAutorizzazione");
 				throw new NotAuthorizedException("Autorizzazione fallita: principal non fornito");
 			}
@@ -255,7 +255,7 @@ public class PagamentiTelematiciRTImpl implements PagamentiTelematiciRT {
 				intermediario = AnagraficaManager.getIntermediario(bd, header.getIdentificativoIntermediarioPA());
 
 				// Controllo autorizzazione
-				if(!principal.equals(intermediario.getConnettorePdd().getPrincipal())){
+				if(GovpayConfig.getInstance().isPddAuthEnable() && !principal.equals(intermediario.getConnettorePdd().getPrincipal())){
 					ctx.log("rt.erroreAutorizzazione", principal);
 					throw new NotAuthorizedException("Autorizzazione fallita: principal fornito (" + principal + ") non corrisponde all'intermediario " + header.getIdentificativoIntermediarioPA() + ". Atteso [" + intermediario.getConnettorePdd().getPrincipal() + "]");
 				}
@@ -312,6 +312,7 @@ public class PagamentiTelematiciRTImpl implements PagamentiTelematiciRT {
 		} finally {
 			try{
 				if(bd != null) {
+					bd.setAutoCommit(true);
 					GiornaleEventi ge = new GiornaleEventi(bd);
 					evento.setEsito(response.getPaaInviaRTRisposta().getEsito());
 					evento.setDataRisposta(new Date());
@@ -338,7 +339,7 @@ public class PagamentiTelematiciRTImpl implements PagamentiTelematiciRT {
 			if(e.getFault().equals(FaultPa.PAA_SYSTEM_ERROR))
 				log.error("Rifiutata RT con Fault " + e.getFault().toString() + ( e.getDescrizione() != null ? (": " + e.getDescrizione()) : ""), e);
 			else
-				log.error("Rifiutata RT con Fault " + e.getFault().toString() + ( e.getDescrizione() != null ? (": " + e.getDescrizione()) : ""));
+				log.warn("Rifiutata RT con Fault " + e.getFault().toString() + ( e.getDescrizione() != null ? (": " + e.getDescrizione()) : ""));
 
 			PaaInviaRTRisposta risposta = (PaaInviaRTRisposta) r;
 			EsitoPaaInviaRT esito = new EsitoPaaInviaRT();
@@ -356,7 +357,7 @@ public class PagamentiTelematiciRTImpl implements PagamentiTelematiciRT {
 			if(e.getFault().equals(FaultPa.PAA_SYSTEM_ERROR))
 				log.error("Rifiutata ER con Fault " + e.getFault().toString() + ( e.getDescrizione() != null ? (": " + e.getDescrizione()) : ""), e);
 			else
-				log.error("Rifiutata ER con Fault " + e.getFault().toString() + ( e.getDescrizione() != null ? (": " + e.getDescrizione()) : ""));
+				log.warn("Rifiutata ER con Fault " + e.getFault().toString() + ( e.getDescrizione() != null ? (": " + e.getDescrizione()) : ""));
 
 			TipoInviaEsitoStornoRisposta risposta = (TipoInviaEsitoStornoRisposta) r;
 			risposta.setEsito("KO");

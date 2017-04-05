@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,6 +20,7 @@
 package it.govpay.core.utils.client;
 
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.UnmarshalException;
 import javax.xml.namespace.QName;
 
 import org.apache.logging.log4j.LogManager;
@@ -37,6 +37,7 @@ import it.govpay.core.exceptions.VersamentoScadutoException;
 import it.govpay.core.exceptions.VersamentoSconosciutoException;
 import it.govpay.core.utils.GpContext;
 import it.govpay.core.utils.GpThreadLocal;
+import it.govpay.core.utils.JaxbUtils;
 import it.govpay.core.utils.VersamentoUtils;
 import it.govpay.model.Applicazione;
 import it.govpay.bd.model.Versamento;
@@ -111,7 +112,13 @@ public class VerificaClient extends BasicClient {
 					QName qname = new QName("http://www.govpay.it/servizi/pa/", "paVerificaVersamento");
 					byte[] response = sendSoap("paVerificaVersamento", new JAXBElement<PaVerificaVersamento>(qname, PaVerificaVersamento.class, paVerificaVersamento), null, false);
 					try {
-						paVerificaVersamentoResponse = (PaVerificaVersamentoResponse) SOAPUtils.unmarshal(response);
+						paVerificaVersamentoResponse = (PaVerificaVersamentoResponse) SOAPUtils.unmarshal(response, JaxbUtils.GP_PA_schema);
+					} catch(UnmarshalException e) {
+						String exc = e.getMessage();
+						if(exc == null && e.getLinkedException() != null)
+							exc = e.getLinkedException().getMessage();
+						ctx.log("verifica.verificaKo", codApplicazione, codVersamentoEnteD, bundlekeyD, debitoreD, codDominioD, iuvD, "Messaggio di risposta malformato (" + exc + ")");
+						throw new ClientException(exc, e);
 					} catch(Exception e) {
 						ctx.log("verifica.verificaKo", codApplicazione, codVersamentoEnteD, bundlekeyD, debitoreD, codDominioD, iuvD, "Errore nella deserializzazione del messaggio di risposta (" + e.getMessage() + ")");
 						throw new ClientException(e);
@@ -121,10 +128,11 @@ public class VerificaClient extends BasicClient {
 				}
 				switch (paVerificaVersamentoResponse.getCodEsito()) {
 				case OK:
+					ctx.log("verifica.avvio", codApplicazione, codVersamentoEnteD, bundlekeyD, debitoreD, codDominioD, iuvD);
 					try {
 						return VersamentoUtils.toVersamentoModel(paVerificaVersamentoResponse.getVersamento(), bd);
 					} catch (GovPayException e) {
-						ctx.log("verifica.verificaKo", codApplicazione, codVersamentoEnteD, debitoreD, codDominioD, iuvD, "[" + e.getCodEsito() + "] " + e.getMessage());
+						ctx.log("verifica.verificaKo", codApplicazione, codVersamentoEnteD, bundlekeyD, debitoreD, codDominioD, iuvD, "[" + e.getCodEsito() + "] " + e.getMessage());
 						throw e;
 					}
 				case PAGAMENTO_ANNULLATO:
@@ -142,16 +150,15 @@ public class VerificaClient extends BasicClient {
 				}
 			default:
 				bd.setupConnection(GpThreadLocal.get().getTransactionId());
-				ctx.log("verifica.verificaKo", codApplicazione, codVersamentoEnteD, bundlekeyD, debitoreD, codDominioD, iuvD, "Tipo del connettore (" + tipo + ") non supportato");
+				ctx.log("verifica.verificaKo", codApplicazione, codVersamentoEnteD, codDominioD, iuvD, "Tipo del connettore (" + tipo + ") non supportato");
 				throw new GovPayException(EsitoOperazione.INTERNAL, "Tipo del connettore (" + tipo + ") non supportato");
 			}
 		} catch (ServiceException e) {
-			ctx.log("verifica.verificaKo", codApplicazione, codVersamentoEnteD, bundlekeyD, debitoreD, codDominioD, iuvD, e.getMessage());
+			ctx.log("verifica.verificaKo", codApplicazione, codVersamentoEnteD, codDominioD, iuvD, e.getMessage());
+			throw e;
 		} finally {
 			ctx.closeTransaction(idTransaction);
 		}
-		
-		throw new ServiceException();
 	}
 	
 	public class SendEsitoResponse {

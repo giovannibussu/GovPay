@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -55,6 +54,11 @@ public class DominioModel extends AbstractModel<Dominio> {
 		this.AUX_DIGIT = new Field("auxDigit",int.class,"Dominio",Dominio.class);
 		this.IUV_PREFIX = new Field("iuvPrefix",java.lang.String.class,"Dominio",Dominio.class);
 		this.IUV_PREFIX_STRICT = new Field("iuvPrefixStrict",boolean.class,"Dominio",Dominio.class);
+		this.SEGREGATION_CODE = new Field("segregationCode",java.lang.Integer.class,"Dominio",Dominio.class);
+		this.NDP_STATO = new Field("ndpStato",java.lang.Integer.class,"Dominio",Dominio.class);
+		this.NDP_OPERAZIONE = new Field("ndpOperazione",java.lang.String.class,"Dominio",Dominio.class);
+		this.NDP_DESCRIZIONE = new Field("ndpDescrizione",java.lang.String.class,"Dominio",Dominio.class);
+		this.NDP_DATA = new Field("ndpData",java.util.Date.class,"Dominio",Dominio.class);
 	
 	}
 	
@@ -75,6 +79,11 @@ public class DominioModel extends AbstractModel<Dominio> {
 		this.AUX_DIGIT = new ComplexField(father,"auxDigit",int.class,"Dominio",Dominio.class);
 		this.IUV_PREFIX = new ComplexField(father,"iuvPrefix",java.lang.String.class,"Dominio",Dominio.class);
 		this.IUV_PREFIX_STRICT = new ComplexField(father,"iuvPrefixStrict",boolean.class,"Dominio",Dominio.class);
+		this.SEGREGATION_CODE = new ComplexField(father,"segregationCode",java.lang.Integer.class,"Dominio",Dominio.class);
+		this.NDP_STATO = new ComplexField(father,"ndpStato",java.lang.Integer.class,"Dominio",Dominio.class);
+		this.NDP_OPERAZIONE = new ComplexField(father,"ndpOperazione",java.lang.String.class,"Dominio",Dominio.class);
+		this.NDP_DESCRIZIONE = new ComplexField(father,"ndpDescrizione",java.lang.String.class,"Dominio",Dominio.class);
+		this.NDP_DATA = new ComplexField(father,"ndpData",java.util.Date.class,"Dominio",Dominio.class);
 	
 	}
 	
@@ -105,6 +114,16 @@ public class DominioModel extends AbstractModel<Dominio> {
 	public IField IUV_PREFIX = null;
 	 
 	public IField IUV_PREFIX_STRICT = null;
+	 
+	public IField SEGREGATION_CODE = null;
+	 
+	public IField NDP_STATO = null;
+	 
+	public IField NDP_OPERAZIONE = null;
+	 
+	public IField NDP_DESCRIZIONE = null;
+	 
+	public IField NDP_DATA = null;
 	 
 
 	@Override

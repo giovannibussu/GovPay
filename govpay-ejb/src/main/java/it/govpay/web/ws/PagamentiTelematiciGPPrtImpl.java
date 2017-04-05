@@ -2,12 +2,11 @@
  * GovPay - Porta di Accesso al Nodo dei Pagamenti SPC 
  * http://www.gov4j.it/govpay
  * 
- * Copyright (c) 2014-2016 Link.it srl (http://www.link.it).
+ * Copyright (c) 2014-2017 Link.it srl (http://www.link.it).
  * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License version 3, as published by
+ * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,6 +24,10 @@ import java.util.List;
 
 import it.govpay.bd.BasicBD;
 import it.govpay.bd.anagrafica.AnagraficaManager;
+import it.govpay.core.business.model.AvviaRichiestaStornoDTO;
+import it.govpay.core.business.model.AvviaRichiestaStornoDTOResponse;
+import it.govpay.core.business.model.AvviaTransazioneDTO;
+import it.govpay.core.business.model.AvviaTransazioneDTOResponse;
 import it.govpay.core.business.model.SceltaWISP;
 import it.govpay.core.exceptions.GovPayException;
 import it.govpay.core.utils.Gp21Utils;
@@ -34,6 +37,7 @@ import it.govpay.core.utils.IuvUtils;
 import it.govpay.core.utils.RptUtils;
 import it.govpay.core.utils.VersamentoUtils;
 import it.govpay.bd.model.Dominio;
+import it.govpay.bd.model.Psp;
 import it.govpay.model.Iuv;
 import it.govpay.model.Portale;
 import it.govpay.model.Versionabile.Versione;
@@ -43,7 +47,6 @@ import it.govpay.bd.model.Versamento;
 import it.govpay.servizi.PagamentiTelematiciGPPrt;
 import it.govpay.servizi.commons.Canale;
 import it.govpay.servizi.commons.EsitoOperazione;
-import it.govpay.servizi.commons.IuvGenerato;
 import it.govpay.servizi.commons.MetaInfo;
 import it.govpay.servizi.commons.StatoVersamento;
 import it.govpay.servizi.commons.TipoVersamento;
@@ -105,11 +108,13 @@ public class PagamentiTelematiciGPPrtImpl implements PagamentiTelematiciGPPrt {
 		BasicBD bd = null;
 		try {
 			bd = BasicBD.newInstance(GpThreadLocal.get().getTransactionId());
-			Portale portaleAutenticato = getPortaleAutenticato(bd);
+			getPortaleAutenticato(bd);
 			ctx.log("ws.ricevutaRichiesta");
 			
 			it.govpay.core.business.Psp pspBusiness = new it.govpay.core.business.Psp(bd);
-			response = pspBusiness.chiediListaPsp(portaleAutenticato);
+			List<Psp> psps = pspBusiness.chiediListaPsp();
+			response.getPsp().addAll(Gp21Utils.toPsp(psps));
+			
 			response.setCodEsitoOperazione(EsitoOperazione.OK);
 			ctx.log("ws.ricevutaRichiestaOk");
 		} catch (GovPayException e) {
@@ -306,7 +311,20 @@ public class PagamentiTelematiciGPPrtImpl implements PagamentiTelematiciGPPrt {
 			
 			ctx.log("pagamento.identificazioneCanale");
 			it.govpay.core.business.Pagamento pagamentoBusiness = new it.govpay.core.business.Pagamento(bd);
-			response = pagamentoBusiness.avviaTransazione(portaleAutenticato, bodyrichiesta, canale);
+			
+			AvviaTransazioneDTO dto = new AvviaTransazioneDTO();
+			dto.setAggiornaSeEsisteB(bodyrichiesta.isAggiornaSeEsiste());
+			dto.setAutenticazione(bodyrichiesta.getAutenticazione().value());
+			dto.setCanale(canale);
+			dto.setIbanAddebito(bodyrichiesta.getIbanAddebito());
+			dto.setPortale(portaleAutenticato);
+			dto.setUrlRitorno(bodyrichiesta.getUrlRitorno());
+			dto.setVersamentoOrVersamentoRef(bodyrichiesta.getVersamentoOrVersamentoRef());
+			dto.setVersante(bodyrichiesta.getVersante());
+			AvviaTransazioneDTOResponse dtoResponse = pagamentoBusiness.avviaTransazione(dto);
+			response.getRifTransazione().addAll(Gp21Utils.toRifTransazione(dtoResponse.getRifTransazioni()));
+			response.setPspSessionId(dtoResponse.getCodSessione());
+			response.setUrlRedirect(dtoResponse.getPspRedirectURL());
 			response.setCodEsitoOperazione(EsitoOperazione.OK);
 			
 			if(response.getPspSessionId() != null) {
@@ -521,7 +539,16 @@ public class PagamentiTelematiciGPPrtImpl implements PagamentiTelematiciGPPrt {
 			ctx.log("ws.autorizzazione");
 			
 			it.govpay.core.business.Pagamento pagamentoBusiness = new it.govpay.core.business.Pagamento(bd);
-			response = pagamentoBusiness.avviaStorno(portaleAutenticato, bodyrichiesta);
+			AvviaRichiestaStornoDTO dto = new AvviaRichiestaStornoDTO();
+			dto.setCausaleRevoca(bodyrichiesta.getCausaleRevoca());
+			dto.setCcp(bodyrichiesta.getCcp());
+			dto.setCodDominio(bodyrichiesta.getCodDominio());
+			dto.setCodPortale(bodyrichiesta.getCodPortale());
+			dto.setDatiAggiuntivi(bodyrichiesta.getDatiAggiuntivi());
+			dto.setIuv(bodyrichiesta.getIuv());
+			dto.setPortale(portaleAutenticato);
+			AvviaRichiestaStornoDTOResponse dtoResponse = pagamentoBusiness.avviaStorno(dto);
+			response.setCodRichiestaStorno(dtoResponse.getCodRichiestaStorno());
 			response.setCodEsitoOperazione(EsitoOperazione.OK);
 			ctx.log("ws.ricevutaRichiestaOk");
 		} catch (GovPayException e) {
@@ -616,11 +643,9 @@ public class PagamentiTelematiciGPPrtImpl implements PagamentiTelematiciGPPrt {
 			response.setCodEsitoOperazione(EsitoOperazione.OK);
 			response.setCodVersamentoEnte(versamento.getCodVersamentoEnte());
 			response.setDataScadenza(versamento.getDataScadenza());
-			if(versamento.getSingoliVersamenti(bd).size() == 1) {
-				response.setIbanAccredito(versamento.getSingoliVersamenti(bd).get(0).getIbanAccredito(bd).getCodIban());
-			}
 			response.setImportoTotale(versamento.getImportoTotale());
 			response.setStato(StatoVersamento.valueOf(versamento.getStatoVersamento().toString()));
+			
 			
 			if(versamento.getCausaleVersamento() instanceof Versamento.CausaleSemplice)
 				response.setCausale(((Versamento.CausaleSemplice) versamento.getCausaleVersamento()).getCausale());
@@ -638,9 +663,9 @@ public class PagamentiTelematiciGPPrtImpl implements PagamentiTelematiciGPPrt {
 			
 			Iuv iuv = versamento.getIuv(bd);
 			if(iuv != null) {
-				IuvGenerato iuvGenerato = IuvUtils.toIuvGenerato(versamento.getApplicazione(bd), versamento.getUo(bd).getDominio(bd), iuv, versamento.getImportoTotale(), portaleAutenticato.getVersione());
+				it.govpay.core.business.model.Iuv iuvGenerato = IuvUtils.toIuv(versamento.getApplicazione(bd), versamento.getUo(bd).getDominio(bd), iuv, versamento.getImportoTotale());
 				response.setIuv(iuv.getIuv());
-				if(portaleAutenticato.getVersione().compareTo(Versione.GP_02_02_02) >= 0)
+				if(portaleAutenticato.getVersione().compareTo(Versione.GP_02_03_00) >= 0)
 					response.setNumeroAvviso(iuvGenerato.getNumeroAvviso());
 				response.setBarCode(iuvGenerato.getBarCode());
 				response.setQrCode(iuvGenerato.getQrCode());
