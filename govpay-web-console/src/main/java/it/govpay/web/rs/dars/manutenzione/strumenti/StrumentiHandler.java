@@ -43,10 +43,10 @@ public class StrumentiHandler extends BaseDarsHandler<Object> implements IDarsHa
 			// Operazione consentita solo all'amministratore
 			this.darsService.checkOperatoreAdmin(bd);
 			URI esportazione = null;
-			URI cancellazione = null;
 			long count = 0;
 
-			Elenco elenco = new Elenco(this.titoloServizio, this.getInfoRicerca(uriInfo, bd),	this.getInfoCreazione(uriInfo, bd), count, esportazione, cancellazione); 
+			Elenco elenco = new Elenco(this.titoloServizio, 
+					this.getInfoRicerca(uriInfo, bd),	this.getInfoCreazione(uriInfo, bd), count, esportazione, this.getInfoCancellazione(uriInfo, bd)); 
 
 			String[] listaOperazioni =  ConsoleProperties.getInstance().getOperazioniJMXDisponibili(); 
 
@@ -88,7 +88,7 @@ public class StrumentiHandler extends BaseDarsHandler<Object> implements IDarsHa
 			this.darsService.checkOperatoreAdmin(bd);
 
 			InfoForm infoModifica = null;
-			URI cancellazione = null;
+			InfoForm infoCancellazione = null;
 			URI esportazione = null;
 
 			String dominio= ConsoleProperties.getInstance().getDominioOperazioniJMX();
@@ -99,7 +99,7 @@ public class StrumentiHandler extends BaseDarsHandler<Object> implements IDarsHa
 			String username = ConsoleProperties.getInstance().getUsernameJMX();
 			String password = ConsoleProperties.getInstance().getPasswordJMX();
 
-			Dettaglio dettaglio = new Dettaglio(titoloOperazione, esportazione, cancellazione, infoModifica);
+			Dettaglio dettaglio = new Dettaglio(titoloOperazione, esportazione, infoCancellazione, infoModifica);
 			it.govpay.web.rs.dars.model.Sezione root = dettaglio.getSezioneRoot();
 
 			Object invoke = null;
@@ -125,7 +125,7 @@ public class StrumentiHandler extends BaseDarsHandler<Object> implements IDarsHa
 					invoke = gestoreJMX.invoke(dominio,tipo,nomeRisorsa,nomeMetodo , null, null);
 
 					if(id==3) {
-						root.addVoce("Esito operazione sul nodo " + nodo,"Reset cache completata con successo.");
+						root.addVoce("Esito operazione sul nodo " + nodo, (String) invoke);
 					} else {
 						root.addVoce("Operazione completata sul nodo",nodo);
 
@@ -176,6 +176,14 @@ public class StrumentiHandler extends BaseDarsHandler<Object> implements IDarsHa
 		InfoForm infoRicerca = new InfoForm(ricerca);
 		return infoRicerca;
 	}
+	
+	@Override
+	public InfoForm getInfoCancellazioneDettaglio(UriInfo uriInfo, BasicBD bd, Object entry) throws ConsoleException {
+		return null;
+	}
+	
+	@Override
+	public InfoForm getInfoCancellazione(UriInfo uriInfo, BasicBD bd) throws ConsoleException { return null;}
 
 	@Override
 	public InfoForm getInfoCreazione(UriInfo uriInfo, BasicBD bd) throws ConsoleException {	return null;	}
@@ -187,7 +195,7 @@ public class StrumentiHandler extends BaseDarsHandler<Object> implements IDarsHa
 	public Object getField(UriInfo uriInfo, List<RawParamValue> values, String fieldId, BasicBD bd)	throws WebApplicationException, ConsoleException {		return null;	}
 
 	@Override
-	public void delete(List<Long> idsToDelete, UriInfo uriInfo, BasicBD bd)	throws WebApplicationException, ConsoleException {	}
+	public Elenco delete(List<Long> idsToDelete, List<RawParamValue> rawValues, UriInfo uriInfo, BasicBD bd)	throws WebApplicationException, ConsoleException {	return null;}
 
 	@Override
 	public Object creaEntry(InputStream is, UriInfo uriInfo, BasicBD bd) throws WebApplicationException, ConsoleException {	return null;}
@@ -206,9 +214,6 @@ public class StrumentiHandler extends BaseDarsHandler<Object> implements IDarsHa
 
 	@Override
 	public String getSottotitolo(Object entry,BasicBD bd) { return null; }
-
-	@Override
-	public List<String> getValori(Object entry, BasicBD bd) throws ConsoleException { return null; }
 	
 	@Override
 	public Map<String, Voce<String>> getVoci(Object entry, BasicBD bd) throws ConsoleException { return null; }

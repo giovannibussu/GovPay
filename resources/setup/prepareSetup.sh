@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-VERSION=2.3.pap
-=======
-VERSION=2.3.2.0
->>>>>>> master
+VERSION=2.3.3.0.pap
 
 # Directory
 COPYING_FILE=../../COPYING
