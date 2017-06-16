@@ -26,6 +26,8 @@ DROP TABLE stazioni CASCADE;
 DROP TABLE intermediari CASCADE;
 DROP TABLE canali CASCADE;
 DROP TABLE psp CASCADE;
+DROP TABLE avvisi_digitali_esiti CASCADE;
+DROP TABLE avvisi_digitali CASCADE;
 DROP SEQUENCE seq_rendicontazioni_senza_rpt CASCADE;
 DROP SEQUENCE seq_eventi CASCADE;
 DROP SEQUENCE seq_pagamenti CASCADE;

@@ -24,3 +24,5 @@ DELETE FROM stazioni;
 DELETE FROM intermediari;
 DELETE FROM canali;
 DELETE FROM psp;
+DELETE FROM avvisi_digitali_esiti;
+DELETE FROM avvisi_digitali;

@@ -48,3 +48,5 @@ DROP TABLE stazioni CASCADE;
 DROP TABLE intermediari CASCADE;
 DROP TABLE canali CASCADE;
 DROP TABLE psp CASCADE;
+DROP TABLE avvisi_digitali_esiti CASCADE;
+DROP TABLE avvisi_digitali CASCADE;
