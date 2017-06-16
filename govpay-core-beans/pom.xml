@@ -52,7 +52,8 @@
 					<schemaDirectory>${basedir}/src/main/resources/xsd/</schemaDirectory>
 					<arguments>-extension -b ${basedir}/src/main/resources/xsd/global.xjb</arguments>
 					<schemaFiles>
-						CatalogoDatiInformativi_1_0_10_TabellaDelleControparti_1_0_8_InformativaContoAccredito_1_2_1.xsd,InformazioniVersamentoQR_1_0_1.xsd,avvisi-digitali-1.0.xsd,presa-in-carico-1.0.xsd,sac-common-types-1.0.xsd
+						CatalogoDatiInformativi_1_0_10_TabellaDelleControparti_1_0_8_InformativaContoAccredito_1_2_1.xsd,
+                        InformazioniVersamentoQR_1_0_1.xsd
 					</schemaFiles>
 				</configuration>
 			</plugin>
@@ -78,7 +79,7 @@
 									<wsdl>${basedir}/src/main/resources/wsdl/NodoPerPa.wsdl</wsdl>
 									<wsdlLocation>classpath:wsdl/NodoPerPa.wsdl</wsdlLocation>
 								</wsdlOption>
-								<wsdlOption>
+                                <wsdlOption>
 									<frontEnd>jaxws21</frontEnd>
 									<wsdl>${basedir}/src/main/resources/wsdl/PaPerNodo.wsdl</wsdl>
 									<wsdlLocation>classpath:wsdl/PaPerNodo.wsdl</wsdlLocation>
