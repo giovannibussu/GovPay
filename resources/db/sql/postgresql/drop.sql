@@ -54,3 +54,5 @@ DROP SEQUENCE seq_stazioni CASCADE;
 DROP SEQUENCE seq_intermediari CASCADE;
 DROP SEQUENCE seq_canali CASCADE;
 DROP SEQUENCE seq_psp CASCADE;
+DROP SEQUENCE seq_avvisi_digitali_esiti CASCADE;
+DROP SEQUENCE seq_avvisi_digitali CASCADE;
