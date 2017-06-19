@@ -11,6 +11,30 @@
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
+
+	<xsd:element name="paAvvisoDigitale">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="codDominio" type="com:cod35" />
+				<xsd:element name="anagraficaBeneficiario" type="com:cod35" />
+				<xsd:element name="idMessaggioRichiesta" type="com:string20" />
+				<xsd:element name="tassonomiaAvviso" type="com:int" />
+				<xsd:element name="iuv" type="com:cod35" />
+
+			</xsd:sequence>
+		</xsd:complexType>
+
+
+		<xsd:element name="iuvRichiesto" maxOccurs="unbounded">
+			<xsd:complexType>
+				<xsd:sequence>
+					<xsd:element name="codVersamentoEnte" type="com:cod35" />
+					<xsd:element name="importoTotale" type="com:importo" />
+				</xsd:sequence>
+			</xsd:complexType>
+		</xsd:element>
+
+	</xsd:element>
 	
 	<xsd:element name="paNotificaStorno">
 		<xsd:complexType>
