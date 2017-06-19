@@ -3,8 +3,4 @@ sudo: required
 jdk:
   - openjdk7
 
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y rpm
-
 script: mvn clean package
