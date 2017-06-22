@@ -1,3 +1,6 @@
+ALTER TABLE domini ADD COLUMN avvisi_digitali TINYINT(1) NOT NULL AFTER custom_iuv;
+
+
 CREATE TABLE avvisi_digitali
 (
 	id_dominio BIGINT NOT NULL, -- Codice fiscale Ente Creditore

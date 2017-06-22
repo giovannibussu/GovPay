@@ -1,3 +1,5 @@
+ALTER TABLE domini ADD COLUMN avvisi_digitali BOOLEAN NOT NULL;
+
 CREATE SEQUENCE seq_avvisi_digitali start 1 increment 1 maxvalue 9223372036854775807 minvalue 1 cache 1 NO CYCLE;
 
 CREATE TABLE avvisi_digitali

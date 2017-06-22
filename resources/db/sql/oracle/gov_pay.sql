@@ -184,6 +184,7 @@ CREATE TABLE domini
 	xml_tabella_controparti BLOB NOT NULL,
 	riuso_iuv NUMBER NOT NULL,
 	custom_iuv NUMBER NOT NULL,
+	avvisi_digitali NUMBER NOT NULL,
 	aux_digit NUMBER NOT NULL,
 	iuv_prefix VARCHAR2(255 CHAR),
 	iuv_prefix_strict NUMBER NOT NULL,

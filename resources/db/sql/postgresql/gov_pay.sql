@@ -126,6 +126,7 @@ CREATE TABLE domini
 	xml_tabella_controparti BYTEA NOT NULL,
 	riuso_iuv BOOLEAN NOT NULL,
 	custom_iuv BOOLEAN NOT NULL,
+	avvisi_digitali BOOLEAN NOT NULL,
 	aux_digit INT NOT NULL DEFAULT 0,
 	iuv_prefix VARCHAR(255),
 	iuv_prefix_strict BOOLEAN NOT NULL DEFAULT false,
