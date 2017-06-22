@@ -49,6 +49,7 @@ CREATE TABLE avvisi_digitali_esiti
 	descrizione_esito VARCHAR(140) NOT NULL, -- Descrizione dell'esito dell'operazione in caso di codice_esito <> 0
 	id_avviso_digitale BIGINT NOT NULL,
 	id BIGINT AUTO_INCREMENT,
+	CONSTRAINT unique_avvisi_digitali_esiti_1 UNIQUE (id_avviso_digitale,id_messaggio_richiesta),
 	-- fk/pk keys constraints
 	-- CONSTRAINT fk_avvisi_digitali_esiti_1 FOREIGN KEY (id_avviso_digitale) REFERENCES avvisi_digitali(id),
 	CONSTRAINT pk_avvisi_digitali_esiti PRIMARY KEY (id)
