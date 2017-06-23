@@ -80,7 +80,19 @@
 			<xsd:maxLength value="2"/>
 		</xsd:restriction>
 	</xsd:simpleType>
-
+	
+	<xsd:simpleType name="String20">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	
+	<xsd:simpleType name="String18">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="18"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	
 	<xsd:simpleType name="String70">
 		<xsd:restriction base="xsd:string">
 			<xsd:maxLength value="70"/>
@@ -174,6 +186,12 @@
 		</xsd:sequence>
 	</xsd:complexType>
 	
+	<xsd:complexType name="iuv-search">
+		<xsd:sequence>
+			<xsd:element name="iuv" type="String35"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
 	
 	<xsd:complexType name="id-incasso">
 		<xsd:sequence>
@@ -244,6 +262,12 @@
 	<xsd:complexType name="id-applicazione">
 		<xsd:sequence>
 			<xsd:element name="codApplicazione" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="id-avviso-digitale">
+		<xsd:sequence>
+			<xsd:element name="idMessaggioRichiesta" type="xsd:string"/>
 		</xsd:sequence>
 	</xsd:complexType>
 
@@ -430,6 +454,7 @@
 			<xsd:element minOccurs="0" name="ndpDescrizione" type="String1024"/>
 			<xsd:element minOccurs="0" name="ndpData" type="xsd:dateTime"/>
 
+			<xsd:element default="false" name="avvisiDigitali" type="xsd:boolean"/>
 		</xsd:sequence>
 	</xsd:complexType>
 
@@ -562,7 +587,50 @@
 			<xsd:element minOccurs="0" name="codApplicazioneIuv" type="String3"/>
 		</xsd:sequence>
 	</xsd:complexType>
-
+	
+	<xsd:element name="AvvisoDigitale" type="AvvisoDigitale"/>
+	<xsd:complexType name="AvvisoDigitale">
+		
+		<xsd:sequence>
+			<xsd:element name="idMessaggioRichiesta" type="String20"/>
+			<xsd:element name="idDominio" type="id-dominio">
+				
+			</xsd:element>
+			<xsd:element name="codiceAvviso" type="String18"/>
+			<xsd:element name="stato" type="String35"/>
+			<xsd:element minOccurs="0" name="descrizioneStato" type="String255"/>
+			<xsd:element name="importoAvviso" type="xsd:double"/>
+			<xsd:element name="descrizionePagamento" type="String140"/>
+			<xsd:element name="tassonomia" type="String2"/>
+			<xsd:element name="anagraficaPagatore" type="String2"/>
+			<xsd:element name="tipoIdentificativoUnivoco" type="String1"/>
+			<xsd:element name="codiceIdentificativoUnivoco" type="String35"/>
+			<xsd:element minOccurs="0" name="emailSoggettoPagatore" type="String255"/>
+			<xsd:element minOccurs="0" name="cellulareSoggettoPagatore" type="String35"/>
+			<xsd:element name="dataScadenzaPagamento" type="xsd:date"/>
+			<xsd:element name="dataScadenzaAvviso" type="xsd:date"/>
+			<xsd:element name="dataCreazione" type="xsd:date"/>
+			<xsd:element minOccurs="0" name="urlAvviso" type="String140"/>
+			
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:element name="AvvisoDigitaleEsito" type="AvvisoDigitaleEsito"/>
+	<xsd:complexType name="AvvisoDigitaleEsito">
+		
+		<xsd:sequence>
+			<xsd:element name="idAvvisoDigitale" type="id-avviso-digitale">
+				
+			</xsd:element>
+			<xsd:element minOccurs="0" name="identificativoCanale" type="String35"/>
+			<xsd:element name="tipoCanaleEsito" type="xsd:long"/>
+			<xsd:element name="dataEsito" type="xsd:date"/>
+			<xsd:element name="codiceEsito" type="xsd:long"/>
+			<xsd:element minOccurs="0" name="descrizioneEsito" type="String255"/>
+			
+		</xsd:sequence>
+	</xsd:complexType>
+	
 	<xsd:element name="IbanAccredito" type="IbanAccredito"/>
 	<xsd:complexType name="IbanAccredito">
 		
@@ -681,11 +749,15 @@
 			<xsd:element name="idUo" type="id-uo">
 				
 			</xsd:element>
-
+			
 			<xsd:element name="idApplicazione" type="id-applicazione">
 				
 			</xsd:element>
-
+			
+			<xsd:element minOccurs="0" name="iuv" type="iuv-search">
+				
+			</xsd:element>
+			
 			<xsd:element name="importoTotale" type="xsd:double"/>
 			<xsd:element name="statoVersamento" type="String35"/>
 			<xsd:element minOccurs="0" name="descrizioneStato" type="xsd:string"/>
@@ -973,11 +1045,13 @@
 			<xsd:element name="codDominio" type="String35"/>
 			<xsd:element name="causale" type="String512"/>
 			<xsd:element name="importo" type="xsd:decimal"/>
-			<xsd:element name="codApplicazione" type="String35"/>
 			<xsd:element minOccurs="0" name="dataValuta" type="xsd:date"/>
 			<xsd:element minOccurs="0" name="dataContabile" type="xsd:date"/>
 			<xsd:element name="dataOraIncasso" type="xsd:dateTime"/>
 			<xsd:element minOccurs="0" name="nomeDispositivo" type="String512"/>
+			<xsd:element minOccurs="0" name="idApplicazione" type="id-applicazione">
+				
+			</xsd:element>
 		</xsd:sequence>
 	</xsd:complexType>
 	
