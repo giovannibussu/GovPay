@@ -53,6 +53,7 @@ import java.io.Serializable;
  * 			&lt;element name="ndpOperazione" type="{http://www.govpay.it/orm}string" minOccurs="0" maxOccurs="1"/>
  * 			&lt;element name="ndpDescrizione" type="{http://www.govpay.it/orm}string" minOccurs="0" maxOccurs="1"/>
  * 			&lt;element name="ndpData" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0" maxOccurs="1"/>
+ * 			&lt;element name="avvisiDigitali" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="1" maxOccurs="1" default="false"/>
  * 		&lt;/sequence>
  * &lt;/complexType>
  * </pre>
@@ -84,7 +85,8 @@ import java.io.Serializable;
   	"ndpStato",
   	"ndpOperazione",
   	"ndpDescrizione",
-  	"ndpData"
+  	"ndpData",
+  	"avvisiDigitali"
   }
 )
 
@@ -274,6 +276,18 @@ public class Dominio extends org.openspcoop2.utils.beans.BaseBean implements Ser
     this.ndpData = ndpData;
   }
 
+  public boolean isAvvisiDigitali() {
+    return this.avvisiDigitali;
+  }
+
+  public boolean getAvvisiDigitali() {
+    return this.avvisiDigitali;
+  }
+
+  public void setAvvisiDigitali(boolean avvisiDigitali) {
+    this.avvisiDigitali = avvisiDigitali;
+  }
+
   private static final long serialVersionUID = 1L;
 
   @XmlTransient
@@ -371,5 +385,9 @@ public class Dominio extends org.openspcoop2.utils.beans.BaseBean implements Ser
   @javax.xml.bind.annotation.XmlSchemaType(name="dateTime")
   @XmlElement(name="ndpData",required=false,nillable=false,type=java.lang.String.class)
   protected java.util.Date ndpData;
+
+  @javax.xml.bind.annotation.XmlSchemaType(name="boolean")
+  @XmlElement(name="avvisiDigitali",required=true,nillable=false,defaultValue="false")
+  protected boolean avvisiDigitali = false;
 
 }

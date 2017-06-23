@@ -47,6 +47,10 @@ public class ModelFactory {
 	
 	public static ApplicazioneModel APPLICAZIONE = new ApplicazioneModel();
 	
+	public static AvvisoDigitaleModel AVVISO_DIGITALE = new AvvisoDigitaleModel();
+	
+	public static AvvisoDigitaleEsitoModel AVVISO_DIGITALE_ESITO = new AvvisoDigitaleEsitoModel();
+	
 	public static IbanAccreditoModel IBAN_ACCREDITO = new IbanAccreditoModel();
 	
 	public static TributoModel TRIBUTO = new TributoModel();

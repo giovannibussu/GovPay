@@ -86,6 +86,8 @@ public class DominioFetch extends AbstractJDBCFetch {
 					jdbcParameterUtilities.readParameter(rs, "ndp_descrizione", Dominio.model().NDP_DESCRIZIONE.getFieldType()));
 				setParameter(object, "setNdpData", Dominio.model().NDP_DATA.getFieldType(),
 					jdbcParameterUtilities.readParameter(rs, "ndp_data", Dominio.model().NDP_DATA.getFieldType()));
+				setParameter(object, "setAvvisiDigitali", Dominio.model().AVVISI_DIGITALI.getFieldType(),
+					jdbcParameterUtilities.readParameter(rs, "avvisi_digitali", Dominio.model().AVVISI_DIGITALI.getFieldType()));
 				return object;
 			}
 			
@@ -140,6 +142,8 @@ public class DominioFetch extends AbstractJDBCFetch {
 					this.getObjectFromMap(map,"ndpDescrizione"));
 				setParameter(object, "setNdpData", Dominio.model().NDP_DATA.getFieldType(),
 					this.getObjectFromMap(map,"ndpData"));
+				setParameter(object, "setAvvisiDigitali", Dominio.model().AVVISI_DIGITALI.getFieldType(),
+					this.getObjectFromMap(map,"avvisiDigitali"));
 				return object;
 			}
 			

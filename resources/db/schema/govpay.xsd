@@ -53,6 +53,10 @@
 									object-type="Rendicontazione"/>
 								<linkit:sql-table object-name="Evento" object-type="Evento"/>
 								<linkit:sql-table object-name="Batch" object-type="Batch"/>
+								<linkit:sql-table object-name="AvvisoDigitale"
+									object-type="AvvisoDigitale"/>
+								<linkit:sql-table object-name="AvvisoDigitaleEsito"
+									object-type="AvvisoDigitaleEsito"/>
 								<linkit:sql-table object-name="id-messaggio"
 									object-type="id-messaggio"/>
 							</linkit:sql-table-list>
@@ -143,7 +147,19 @@
 			<xsd:maxLength value="2"/>
 		</xsd:restriction>
 	</xsd:simpleType>
-
+	
+	<xsd:simpleType name="String20">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="20"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	
+	<xsd:simpleType name="String18">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="18"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	
 	<xsd:simpleType name="String70">
 		<xsd:restriction base="xsd:string">
 			<xsd:maxLength value="70"/>
@@ -313,6 +329,12 @@
 	<xsd:complexType name="id-applicazione">
 		<xsd:sequence>
 			<xsd:element name="codApplicazione" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="id-avviso-digitale">
+		<xsd:sequence>
+			<xsd:element name="idMessaggioRichiesta" type="xsd:string"/>
 		</xsd:sequence>
 	</xsd:complexType>
 
@@ -526,6 +548,7 @@
 			<xsd:element name="ndpDescrizione" type="String1024" minOccurs="0"/>
 			<xsd:element name="ndpData" type="xsd:dateTime" minOccurs="0"/>
 
+			<xsd:element name="avvisiDigitali" type="xsd:boolean" default="false"/>
 		</xsd:sequence>
 	</xsd:complexType>
 
@@ -796,7 +819,90 @@
 			<xsd:element name="codApplicazioneIuv" type="String3" minOccurs="0"/>
 		</xsd:sequence>
 	</xsd:complexType>
-
+	
+	<xsd:element name="AvvisoDigitale" type="AvvisoDigitale"/>
+	<xsd:complexType name="AvvisoDigitale">
+		<xsd:annotation>
+			<xsd:appinfo>
+				<linkit:generator xmlns:linkit="http://www.link.it/project_generator">
+					<linkit:interface crud="true" id="id-avviso-digitale"/>
+					<linkit:sql-table-mapping generate-sql="true" name="avvisi_digitali"
+						on-delete-cascade="false">
+						<linkit:sql-table-unique create-index="true">
+							<linkit:sql-table-unique-field name="idMessaggioRichiesta"/>
+						</linkit:sql-table-unique>
+						<linkit:sql-table-unique create-index="true">
+							<linkit:sql-table-unique-column name="id_dominio"/>
+							<linkit:sql-table-unique-field name="codiceAvviso"/>
+						</linkit:sql-table-unique>
+					</linkit:sql-table-mapping>
+				</linkit:generator>
+			</xsd:appinfo>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="idMessaggioRichiesta" type="String20"/>
+			<xsd:element name="idDominio" type="id-dominio">
+				<xsd:annotation>
+					<xsd:appinfo>
+						<linkit:generator xmlns:linkit="http://www.link.it/project_generator">
+							<linkit:sql-id-mapping object-name="Dominio"
+								object-type="Dominio" relationship="reversed"/>
+						</linkit:generator>
+					</xsd:appinfo>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="codiceAvviso" type="String18"/>
+			<xsd:element name="stato" type="String35"/>
+			<xsd:element name="descrizioneStato" type="String255" minOccurs="0"/>
+			<xsd:element name="importoAvviso" type="xsd:double"/>
+			<xsd:element name="descrizionePagamento" type="String140"/>
+			<xsd:element name="tassonomia" type="String2"/>
+			<xsd:element name="anagraficaPagatore" type="String2"/>
+			<xsd:element name="tipoIdentificativoUnivoco" type="String1"/>
+			<xsd:element name="codiceIdentificativoUnivoco" type="String35"/>
+			<xsd:element name="emailSoggettoPagatore" type="String255" minOccurs="0"/>
+			<xsd:element name="cellulareSoggettoPagatore" type="String35" minOccurs="0"/>
+			<xsd:element name="dataScadenzaPagamento" type="xsd:date"/>
+			<xsd:element name="dataScadenzaAvviso" type="xsd:date"/>
+			<xsd:element name="dataCreazione" type="xsd:date"/>
+			<xsd:element name="urlAvviso" type="String140" minOccurs="0"/>
+			
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:element name="AvvisoDigitaleEsito" type="AvvisoDigitaleEsito"/>
+	<xsd:complexType name="AvvisoDigitaleEsito">
+		<xsd:annotation>
+			<xsd:appinfo>
+				<linkit:generator xmlns:linkit="http://www.link.it/project_generator">
+					<linkit:interface crud="true"/>
+					<linkit:sql-table-mapping generate-sql="true" name="avvisi_digitali_esiti"
+						on-delete-cascade="false">
+					</linkit:sql-table-mapping>
+				</linkit:generator>
+			</xsd:appinfo>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="idMessaggioRichiesta" type="String20"/>
+			<xsd:element name="idAvvisoDigitale" type="id-avviso-digitale">
+				<xsd:annotation>
+					<xsd:appinfo>
+						<linkit:generator xmlns:linkit="http://www.link.it/project_generator">
+							<linkit:sql-id-mapping object-name="AvvisoDigitale"
+								object-type="AvvisoDigitale" relationship="reversed"/>
+						</linkit:generator>
+					</xsd:appinfo>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="identificativoCanale" type="String35" minOccurs="0"/>
+			<xsd:element name="tipoCanaleEsito" type="xsd:long"/>
+			<xsd:element name="dataEsito" type="xsd:date"/>
+			<xsd:element name="codiceEsito" type="xsd:long"/>
+			<xsd:element name="descrizioneEsito" type="String255" minOccurs="0"/>
+			
+		</xsd:sequence>
+	</xsd:complexType>
+	
 	<xsd:element name="IbanAccredito" type="IbanAccredito"/>
 	<xsd:complexType name="IbanAccredito">
 		<xsd:annotation>
@@ -1846,3 +1952,4 @@
 
 
 </xsd:schema>
+

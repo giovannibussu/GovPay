@@ -102,6 +102,13 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link IdAvvisoDigitale }
+     */
+    public IdAvvisoDigitale createIdAvvisoDigitale() {
+        return new IdAvvisoDigitale();
+    }
+
+    /**
      * Create an instance of {@link Applicazione }
      */
     public Applicazione createApplicazione() {
@@ -256,6 +263,13 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link AvvisoDigitale }
+     */
+    public AvvisoDigitale createAvvisoDigitale() {
+        return new AvvisoDigitale();
+    }
+
+    /**
      * Create an instance of {@link Operatore }
      */
     public Operatore createOperatore() {
@@ -302,6 +316,13 @@ public class ObjectFactory {
      */
     public IdIbanAccredito createIdIbanAccredito() {
         return new IdIbanAccredito();
+    }
+
+    /**
+     * Create an instance of {@link AvvisoDigitaleEsito }
+     */
+    public AvvisoDigitaleEsito createAvvisoDigitaleEsito() {
+        return new AvvisoDigitaleEsito();
     }
 
     /**

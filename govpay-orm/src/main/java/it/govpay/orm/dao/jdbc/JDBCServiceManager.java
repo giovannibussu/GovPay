@@ -60,6 +60,10 @@ import it.govpay.orm.dao.ISingoloVersamentoServiceSearch;
 import it.govpay.orm.dao.IStazioneService;
 import it.govpay.orm.dao.IStazioneServiceSearch;
 import it.govpay.orm.dao.ITipoTributoService;
+import it.govpay.orm.dao.IAvvisoDigitaleServiceSearch;
+import it.govpay.orm.dao.IAvvisoDigitaleService;
+import it.govpay.orm.dao.IAvvisoDigitaleEsitoServiceSearch;
+import it.govpay.orm.dao.IAvvisoDigitaleEsitoService;
 import it.govpay.orm.dao.ITipoTributoServiceSearch;
 import it.govpay.orm.dao.ITributoService;
 import it.govpay.orm.dao.ITributoServiceSearch;
@@ -480,6 +484,70 @@ public class JDBCServiceManager extends org.openspcoop2.generic_project.dao.jdbc
 	@Override
 	public IApplicazioneService getApplicazioneService() throws ServiceException,NotImplementedException{
 		return new JDBCApplicazioneService(this);
+	}
+	
+	
+	
+	/*
+	 =====================================================================================================================
+	 Services relating to the object with name:AvvisoDigitale type:AvvisoDigitale
+	 =====================================================================================================================
+	*/
+	
+	/**
+	 * Return a service used to research on the backend on objects of type {@link it.govpay.orm.AvvisoDigitale}
+	 *
+	 * @return Service used to research on the backend on objects of type {@link it.govpay.orm.AvvisoDigitale}	
+	 * @throws ServiceException Exception thrown when an error occurs during processing of the request
+	 * @throws NotImplementedException Exception thrown when the method is not implemented
+	 */
+	@Override
+	public IAvvisoDigitaleServiceSearch getAvvisoDigitaleServiceSearch() throws ServiceException,NotImplementedException{
+		return new JDBCAvvisoDigitaleServiceSearch(this);
+	}
+	
+	/**
+	 * Return a service used to research and manage on the backend on objects of type {@link it.govpay.orm.AvvisoDigitale}
+	 *
+	 * @return Service used to research and manage on the backend on objects of type {@link it.govpay.orm.AvvisoDigitale}	
+	 * @throws ServiceException Exception thrown when an error occurs during processing of the request
+	 * @throws NotImplementedException Exception thrown when the method is not implemented
+	 */
+	@Override
+	public IAvvisoDigitaleService getAvvisoDigitaleService() throws ServiceException,NotImplementedException{
+		return new JDBCAvvisoDigitaleService(this);
+	}
+	
+	
+	
+	/*
+	 =====================================================================================================================
+	 Services relating to the object with name:AvvisoDigitaleEsito type:AvvisoDigitaleEsito
+	 =====================================================================================================================
+	*/
+	
+	/**
+	 * Return a service used to research on the backend on objects of type {@link it.govpay.orm.AvvisoDigitaleEsito}
+	 *
+	 * @return Service used to research on the backend on objects of type {@link it.govpay.orm.AvvisoDigitaleEsito}	
+	 * @throws ServiceException Exception thrown when an error occurs during processing of the request
+	 * @throws NotImplementedException Exception thrown when the method is not implemented
+	 */
+	@Override
+	public IAvvisoDigitaleEsitoServiceSearch getAvvisoDigitaleEsitoServiceSearch() throws ServiceException,NotImplementedException{
+		return new JDBCAvvisoDigitaleEsitoServiceSearch(this);
+	}
+	
+	/**
+	 * Return a service used to research and manage on the backend on objects of type {@link it.govpay.orm.AvvisoDigitaleEsito}
+	 *
+	 * @return Service used to research and manage on the backend on objects of type {@link it.govpay.orm.AvvisoDigitaleEsito}	
+	 * @throws ServiceException Exception thrown when an error occurs during processing of the request
+	 * @throws NotImplementedException Exception thrown when the method is not implemented
+	 */
+	@Override
+	public IAvvisoDigitaleEsitoService getAvvisoDigitaleEsitoService() throws ServiceException,NotImplementedException{
+		return new JDBCAvvisoDigitaleEsitoService(this);
 	}
 	
 	

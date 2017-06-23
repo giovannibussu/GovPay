@@ -19,73 +19,67 @@
  */
 package it.govpay.orm.dao.jdbc;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
+import it.govpay.orm.AvvisoDigitaleEsito;
+import it.govpay.orm.dao.jdbc.converter.AvvisoDigitaleEsitoFieldConverter;
+import it.govpay.orm.dao.jdbc.fetch.AvvisoDigitaleEsitoFetch;
 
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
-
-import org.openspcoop2.utils.sql.ISQLQueryObject;
-
-import org.openspcoop2.generic_project.expression.impl.sql.ISQLFieldConverter;
+import org.openspcoop2.generic_project.beans.CustomField;
+import org.openspcoop2.generic_project.beans.FunctionField;
+import org.openspcoop2.generic_project.beans.IField;
+import org.openspcoop2.generic_project.beans.InUse;
+import org.openspcoop2.generic_project.beans.NonNegativeNumber;
+import org.openspcoop2.generic_project.beans.Union;
+import org.openspcoop2.generic_project.beans.UnionExpression;
+import org.openspcoop2.generic_project.dao.jdbc.IJDBCServiceSearchWithoutId;
+import org.openspcoop2.generic_project.dao.jdbc.JDBCExpression;
+import org.openspcoop2.generic_project.dao.jdbc.JDBCPaginatedExpression;
+import org.openspcoop2.generic_project.dao.jdbc.JDBCServiceManagerProperties;
 import org.openspcoop2.generic_project.dao.jdbc.utils.IJDBCFetch;
 import org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject;
-import org.openspcoop2.generic_project.dao.jdbc.IJDBCServiceSearchWithId;
-import it.govpay.orm.IdDominio;
-import org.openspcoop2.generic_project.utils.UtilsTemplate;
-import org.openspcoop2.generic_project.beans.CustomField;
-import org.openspcoop2.generic_project.beans.InUse;
-import org.openspcoop2.generic_project.beans.IField;
-import org.openspcoop2.generic_project.beans.NonNegativeNumber;
-import org.openspcoop2.generic_project.beans.UnionExpression;
-import org.openspcoop2.generic_project.beans.Union;
-import org.openspcoop2.generic_project.beans.FunctionField;
 import org.openspcoop2.generic_project.exception.MultipleResultException;
 import org.openspcoop2.generic_project.exception.NotFoundException;
 import org.openspcoop2.generic_project.exception.NotImplementedException;
 import org.openspcoop2.generic_project.exception.ServiceException;
 import org.openspcoop2.generic_project.expression.IExpression;
-import org.openspcoop2.generic_project.dao.jdbc.JDBCExpression;
-import org.openspcoop2.generic_project.dao.jdbc.JDBCPaginatedExpression;
-
-import org.openspcoop2.generic_project.dao.jdbc.JDBCServiceManagerProperties;
-import it.govpay.orm.dao.jdbc.converter.DominioFieldConverter;
-import it.govpay.orm.dao.jdbc.fetch.DominioFetch;
-import it.govpay.orm.dao.jdbc.JDBCServiceManager;
-
-import it.govpay.orm.Dominio;
+import org.openspcoop2.generic_project.expression.impl.sql.ISQLFieldConverter;
+import org.openspcoop2.generic_project.utils.UtilsTemplate;
+import org.openspcoop2.utils.sql.ISQLQueryObject;
 
 /**     
- * JDBCDominioServiceSearchImpl
+ * JDBCAvvisoDigitaleEsitoServiceSearchImpl
  *
  * @author Giovanni Bussu (bussu@link.it)
  * @author Lorenzo Nardi (nardi@link.it)
  * @author $Author$
  * @version $Rev$, $Date$
  */
-public class JDBCDominioServiceSearchImpl implements IJDBCServiceSearchWithId<Dominio, IdDominio, JDBCServiceManager> {
+public class JDBCAvvisoDigitaleEsitoServiceSearchImpl implements IJDBCServiceSearchWithoutId<AvvisoDigitaleEsito, JDBCServiceManager> {
 
-	private DominioFieldConverter _dominioFieldConverter = null;
-	public DominioFieldConverter getDominioFieldConverter() {
-		if(this._dominioFieldConverter==null){
-			this._dominioFieldConverter = new DominioFieldConverter(this.jdbcServiceManager.getJdbcProperties().getDatabaseType());
+	private AvvisoDigitaleEsitoFieldConverter _avvisoDigitaleEsitoFieldConverter = null;
+	public AvvisoDigitaleEsitoFieldConverter getAvvisoDigitaleEsitoFieldConverter() {
+		if(this._avvisoDigitaleEsitoFieldConverter==null){
+			this._avvisoDigitaleEsitoFieldConverter = new AvvisoDigitaleEsitoFieldConverter(this.jdbcServiceManager.getJdbcProperties().getDatabaseType());
 		}		
-		return this._dominioFieldConverter;
+		return this._avvisoDigitaleEsitoFieldConverter;
 	}
 	@Override
 	public ISQLFieldConverter getFieldConverter() {
-		return this.getDominioFieldConverter();
+		return this.getAvvisoDigitaleEsitoFieldConverter();
 	}
 	
-	private DominioFetch dominioFetch = new DominioFetch();
-	public DominioFetch getDominioFetch() {
-		return this.dominioFetch;
+	private AvvisoDigitaleEsitoFetch avvisoDigitaleEsitoFetch = new AvvisoDigitaleEsitoFetch();
+	public AvvisoDigitaleEsitoFetch getAvvisoDigitaleEsitoFetch() {
+		return this.avvisoDigitaleEsitoFetch;
 	}
 	@Override
 	public IJDBCFetch getFetch() {
-		return getDominioFetch();
+		return getAvvisoDigitaleEsitoFetch();
 	}
 	
 	
@@ -102,134 +96,63 @@ public class JDBCDominioServiceSearchImpl implements IJDBCServiceSearchWithId<Do
 	}
 	
 
-	@Override
-	public IdDominio convertToId(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, Dominio dominio) throws NotImplementedException, ServiceException, Exception{
 	
-		IdDominio idDominio = new IdDominio();
-		idDominio.setCodDominio(dominio.getCodDominio());
 	
-		return idDominio;
-	}
+	
 	
 	@Override
-	public Dominio get(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, IdDominio id, org.openspcoop2.generic_project.beans.IDMappingBehaviour idMappingResolutionBehaviour) throws NotFoundException, MultipleResultException, NotImplementedException, ServiceException,Exception {
-		Long id_dominio = ( (id!=null && id.getId()!=null && id.getId()>0) ? id.getId() : this.findIdDominio(jdbcProperties, log, connection, sqlQueryObject, id, true));
-		return this._get(jdbcProperties, log, connection, sqlQueryObject, id_dominio,idMappingResolutionBehaviour);
-		
-		
-	}
-	
-	@Override
-	public boolean exists(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, IdDominio id) throws MultipleResultException, NotImplementedException, ServiceException,Exception {
+	public List<AvvisoDigitaleEsito> findAll(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, JDBCPaginatedExpression expression, org.openspcoop2.generic_project.beans.IDMappingBehaviour idMappingResolutionBehaviour) throws NotImplementedException, ServiceException,Exception {
 
-		Long id_dominio = this.findIdDominio(jdbcProperties, log, connection, sqlQueryObject, id, false);
-		return id_dominio != null && id_dominio > 0;
-		
-	}
-	
-	@Override
-	public List<IdDominio> findAllIds(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, JDBCPaginatedExpression expression, org.openspcoop2.generic_project.beans.IDMappingBehaviour idMappingResolutionBehaviour) throws NotImplementedException, ServiceException,Exception {
-        // default behaviour (id-mapping)
+		// default behaviour (id-mapping)
         if(idMappingResolutionBehaviour==null){
                 idMappingResolutionBehaviour = org.openspcoop2.generic_project.beans.IDMappingBehaviour.valueOf("USE_TABLE_ID");
         }
 
-		List<IdDominio> list = new ArrayList<IdDominio>();
+        List<AvvisoDigitaleEsito> list = new ArrayList<AvvisoDigitaleEsito>();
 
-		try {
+		try{
 			List<IField> fields = new ArrayList<IField>();
-
-			fields.add(Dominio.model().COD_DOMINIO);
-        
-			List<Map<String, Object>> returnMap = this.select(jdbcProperties, log, connection, sqlQueryObject, expression, fields.toArray(new IField[1]));
-
-			for(Map<String, Object> map: returnMap) {
-				list.add(this.convertToId(jdbcProperties, log, connection, sqlQueryObject, (Dominio)this.getDominioFetch().fetch(jdbcProperties.getDatabase(), Dominio.model(), map)));
-        }
-		} catch(NotFoundException e) {}
-
-        return list;
-		
-	}
-	
-	@Override
-	public List<Dominio> findAll(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, JDBCPaginatedExpression expression, org.openspcoop2.generic_project.beans.IDMappingBehaviour idMappingResolutionBehaviour) throws NotImplementedException, ServiceException,Exception {
-
-        // default behaviour (id-mapping)
-        if(idMappingResolutionBehaviour==null){
-                idMappingResolutionBehaviour = org.openspcoop2.generic_project.beans.IDMappingBehaviour.valueOf("USE_TABLE_ID");
-        }
-        List<Dominio> list = new ArrayList<Dominio>();
-        
-		try {
-			List<IField> fields = new ArrayList<IField>();
-			fields.add(new CustomField("id", Long.class, "id", this.getDominioFieldConverter().toTable(Dominio.model())));
-
-			fields.add(Dominio.model().COD_DOMINIO);
-			fields.add(Dominio.model().RAGIONE_SOCIALE);
-			fields.add(Dominio.model().GLN);
-			fields.add(Dominio.model().XML_CONTI_ACCREDITO);
-			fields.add(Dominio.model().XML_TABELLA_CONTROPARTI);
-			fields.add(Dominio.model().ABILITATO);
-			fields.add(Dominio.model().RIUSO_IUV);
-			fields.add(Dominio.model().CUSTOM_IUV);
-			fields.add(Dominio.model().AUX_DIGIT);
-			fields.add(Dominio.model().IUV_PREFIX);
-			fields.add(Dominio.model().IUV_PREFIX_STRICT);
-			fields.add(Dominio.model().SEGREGATION_CODE);
-			fields.add(Dominio.model().NDP_STATO);
-			fields.add(Dominio.model().NDP_OPERAZIONE);
-			fields.add(Dominio.model().NDP_DESCRIZIONE);
-zzz
-
-
-			fields.add(new CustomField("id_stazione", Long.class, "id_stazione", this.getDominioFieldConverter().toTable(Dominio.model())));
-			fields.add(new CustomField("id_applicazione_default", Long.class, "id_applicazione_default", this.getDominioFieldConverter().toTable(Dominio.model())));
+			fields.add(new CustomField("id_avviso_digitale", Long.class, "id_avviso_digitale", this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model())));
+            fields.add(new CustomField("id", Long.class, "id", this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model())));
+    		fields.add(AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA);
+    		fields.add(AvvisoDigitaleEsito.model().IDENTIFICATIVO_CANALE);
+    		fields.add(AvvisoDigitaleEsito.model().TIPO_CANALE_ESITO);
+    		fields.add(AvvisoDigitaleEsito.model().DATA_ESITO);
+    		fields.add(AvvisoDigitaleEsito.model().CODICE_ESITO);
+    		fields.add(AvvisoDigitaleEsito.model().DESCRIZIONE_ESITO);
 
 			List<Map<String, Object>> returnMap = this.select(jdbcProperties, log, connection, sqlQueryObject, expression, fields.toArray(new IField[1]));
 
 			for(Map<String, Object> map: returnMap) {
-				Long id_stazione = (Long) map.remove("id_stazione");
-				
-				Object id_applicazione_defaultOBJ = map.remove("id_applicazione_default");
-				
-				Long id_applicazione_default = null;
-				if(id_applicazione_defaultOBJ instanceof Long) {
-					id_applicazione_default = (Long) id_applicazione_defaultOBJ;
-				}
-				
-				Dominio dominio = (Dominio)this.getDominioFetch().fetch(jdbcProperties.getDatabase(), Dominio.model(), map);
-				
-				it.govpay.orm.IdStazione id_dominio_stazione = null;
-				if(idMappingResolutionBehaviour==null || org.openspcoop2.generic_project.beans.IDMappingBehaviour.ENABLED.equals(idMappingResolutionBehaviour)){
-					id_dominio_stazione = ((JDBCStazioneServiceSearch)(this.getServiceManager().getStazioneServiceSearch())).findId(id_stazione, false);
-				}else{
-					id_dominio_stazione = new it.govpay.orm.IdStazione();
-				}
-				id_dominio_stazione.setId(id_stazione);
-				dominio.setIdStazione(id_dominio_stazione);
+                Long idAvvisoDigitale = (Long) map.remove("id_avviso_digitale");
 
-				if(id_applicazione_default != null) {
-					it.govpay.orm.IdApplicazione id_dominio_applicazione = null;
-					if(idMappingResolutionBehaviour==null || org.openspcoop2.generic_project.beans.IDMappingBehaviour.ENABLED.equals(idMappingResolutionBehaviour)){
-						id_dominio_applicazione = ((JDBCApplicazioneServiceSearch)(this.getServiceManager().getApplicazioneServiceSearch())).findId(id_applicazione_default, false);
-					}else{
-						id_dominio_applicazione = new it.govpay.orm.IdApplicazione();
-					}
-					id_dominio_applicazione.setId(id_applicazione_default);
-					dominio.setIdApplicazioneDefault(id_dominio_applicazione);
-				}
+                AvvisoDigitaleEsito avvisoDigitaleEsito = (AvvisoDigitaleEsito)this.getAvvisoDigitaleEsitoFetch().fetch(jdbcProperties.getDatabase(), AvvisoDigitaleEsito.model(), map);
 
-				list.add(dominio);
+        		if(idMappingResolutionBehaviour==null ||
+        				(org.openspcoop2.generic_project.beans.IDMappingBehaviour.ENABLED.equals(idMappingResolutionBehaviour) || org.openspcoop2.generic_project.beans.IDMappingBehaviour.USE_TABLE_ID.equals(idMappingResolutionBehaviour))
+        			){
+
+    				it.govpay.orm.IdAvvisoDigitale id_avviso_digitale = null;
+    				if(idMappingResolutionBehaviour==null || org.openspcoop2.generic_project.beans.IDMappingBehaviour.ENABLED.equals(idMappingResolutionBehaviour)){
+    					id_avviso_digitale = ((JDBCAvvisoDigitaleServiceSearch)(this.getServiceManager().getAvvisoDigitaleServiceSearch())).findId(idAvvisoDigitale, false);
+    				}else{
+    					id_avviso_digitale = new it.govpay.orm.IdAvvisoDigitale();
+    				}
+    				id_avviso_digitale.setId(idAvvisoDigitale);
+    				avvisoDigitaleEsito.setIdAvvisoDigitale(id_avviso_digitale);
+    			}
+
+                list.add(avvisoDigitaleEsito);
+
 			}
 		} catch(NotFoundException e) {}
 
-        return list;      
+        return list;  
 		
 	}
 	
 	@Override
-	public Dominio find(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, JDBCExpression expression, org.openspcoop2.generic_project.beans.IDMappingBehaviour idMappingResolutionBehaviour) 
+	public AvvisoDigitaleEsito find(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, JDBCExpression expression, org.openspcoop2.generic_project.beans.IDMappingBehaviour idMappingResolutionBehaviour) 
 		throws NotFoundException, MultipleResultException, NotImplementedException, ServiceException,Exception {
 
         long id = this.findTableId(jdbcProperties, log, connection, sqlQueryObject, expression);
@@ -245,23 +168,16 @@ zzz
 	public NonNegativeNumber count(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, JDBCExpression expression) throws NotImplementedException, ServiceException,Exception {
 		
 		List<Object> listaQuery = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.prepareCount(jdbcProperties, log, connection, sqlQueryObject, expression,
-												this.getDominioFieldConverter(), Dominio.model());
+												this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model());
 		
-		sqlQueryObject.addSelectCountField(this.getDominioFieldConverter().toTable(Dominio.model())+".id","tot",true);
+		sqlQueryObject.addSelectCountField(this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model())+".id","tot",true);
 		
 		_join(expression,sqlQueryObject);
 		
 		return org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.count(jdbcProperties, log, connection, sqlQueryObject, expression,
-																			this.getDominioFieldConverter(), Dominio.model(),listaQuery);
+																			this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model(),listaQuery);
 	}
 
-	@Override
-	public InUse inUse(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, IdDominio id) throws NotFoundException, NotImplementedException, ServiceException,Exception {
-		
-		Long id_dominio = this.findIdDominio(jdbcProperties, log, connection, sqlQueryObject, id, true);
-        return this._inUse(jdbcProperties, log, connection, sqlQueryObject, id_dominio);
-		
-	}
 
 	@Override
 	public List<Object> select(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, 
@@ -294,7 +210,7 @@ zzz
 		
 			ISQLQueryObject sqlQueryObjectDistinct = 
 						org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.prepareSqlQueryObjectForSelectDistinct(distinct,sqlQueryObject, paginatedExpression, log,
-												this.getDominioFieldConverter(), field);
+												this.getAvvisoDigitaleEsitoFieldConverter(), field);
 
 			return _select(jdbcProperties, log, connection, sqlQueryObject, paginatedExpression, sqlQueryObjectDistinct);
 			
@@ -367,14 +283,14 @@ zzz
 		List<Object> listaQuery = new ArrayList<Object>();
 		List<JDBCObject> listaParams = new ArrayList<JDBCObject>();
 		List<Object> returnField = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.prepareSelect(jdbcProperties, log, connection, sqlQueryObject, 
-        						expression, this.getDominioFieldConverter(), Dominio.model(), 
+        						expression, this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model(), 
         						listaQuery,listaParams);
 		
 		_join(expression,sqlQueryObject);
         
         List<Map<String,Object>> list = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.select(jdbcProperties, log, connection,
         								org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.prepareSqlQueryObjectForSelectDistinct(sqlQueryObject,sqlQueryObjectDistinct), 
-        								expression, this.getDominioFieldConverter(), Dominio.model(),
+        								expression, this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model(),
         								listaQuery,listaParams,returnField);
 		if(list!=null && list.size()>0){
 			return list;
@@ -391,7 +307,7 @@ zzz
 		List<ISQLQueryObject> sqlQueryObjectInnerList = new ArrayList<ISQLQueryObject>();
 		List<JDBCObject> jdbcObjects = new ArrayList<JDBCObject>();
 		List<Class<?>> returnClassTypes = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.prepareUnion(jdbcProperties, log, connection, sqlQueryObject, 
-        						this.getDominioFieldConverter(), Dominio.model(), 
+        						this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model(), 
         						sqlQueryObjectInnerList, jdbcObjects, union, unionExpression);
 		
 		if(unionExpression!=null){
@@ -403,7 +319,7 @@ zzz
 		}
         
         List<Map<String,Object>> list = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.union(jdbcProperties, log, connection, sqlQueryObject, 
-        								this.getDominioFieldConverter(), Dominio.model(), 
+        								this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model(), 
         								sqlQueryObjectInnerList, jdbcObjects, returnClassTypes, union, unionExpression);
         if(list!=null && list.size()>0){
 			return list;
@@ -420,7 +336,7 @@ zzz
 		List<ISQLQueryObject> sqlQueryObjectInnerList = new ArrayList<ISQLQueryObject>();
 		List<JDBCObject> jdbcObjects = new ArrayList<JDBCObject>();
 		List<Class<?>> returnClassTypes = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.prepareUnionCount(jdbcProperties, log, connection, sqlQueryObject, 
-        						this.getDominioFieldConverter(), Dominio.model(), 
+        						this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model(), 
         						sqlQueryObjectInnerList, jdbcObjects, union, unionExpression);
 		
 		if(unionExpression!=null){
@@ -432,7 +348,7 @@ zzz
 		}
         
         NonNegativeNumber number = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.unionCount(jdbcProperties, log, connection, sqlQueryObject, 
-        								this.getDominioFieldConverter(), Dominio.model(), 
+        								this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model(), 
         								sqlQueryObjectInnerList, jdbcObjects, returnClassTypes, union, unionExpression);
         if(number!=null && number.longValue()>=0){
 			return number;
@@ -449,7 +365,7 @@ zzz
 	@Override
 	public JDBCExpression newExpression(Logger log) throws NotImplementedException, ServiceException {
 		try{
-			return new JDBCExpression(this.getDominioFieldConverter());
+			return new JDBCExpression(this.getAvvisoDigitaleEsitoFieldConverter());
 		}catch(Exception e){
 			throw new ServiceException(e);
 		}
@@ -459,7 +375,7 @@ zzz
 	@Override
 	public JDBCPaginatedExpression newPaginatedExpression(Logger log) throws NotImplementedException, ServiceException {
 		try{
-			return new JDBCPaginatedExpression(this.getDominioFieldConverter());
+			return new JDBCPaginatedExpression(this.getAvvisoDigitaleEsitoFieldConverter());
 		}catch(Exception e){
 			throw new ServiceException(e);
 		}
@@ -487,57 +403,31 @@ zzz
 	
 	// -- DB
 
-	@Override
-	public void mappingTableIds(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, IdDominio id, Dominio obj) throws NotFoundException,NotImplementedException,ServiceException,Exception{
-		_mappingTableIds(jdbcProperties,log,connection,sqlQueryObject,obj,
-				this.get(jdbcProperties,log,connection,sqlQueryObject,id,null));
-	}
 	
 	@Override
-	public void mappingTableIds(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, long tableId, Dominio obj) throws NotFoundException,NotImplementedException,ServiceException,Exception{
-		_mappingTableIds(jdbcProperties,log,connection,sqlQueryObject,obj,
-				this.get(jdbcProperties,log,connection,sqlQueryObject,tableId,null));
-	}
-	private void _mappingTableIds(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, Dominio obj, Dominio imgSaved) throws NotFoundException,NotImplementedException,ServiceException,Exception{
-		if(imgSaved==null){
-			return;
-		}
-		obj.setId(imgSaved.getId());
-		if(obj.getIdStazione()!=null && 
-				imgSaved.getIdStazione()!=null){
-			obj.getIdStazione().setId(imgSaved.getIdStazione().getId());
-		}
-		if(obj.getIdApplicazioneDefault()!=null && 
-				imgSaved.getIdApplicazioneDefault()!=null){
-			obj.getIdApplicazioneDefault().setId(imgSaved.getIdApplicazioneDefault().getId());
-		}
-
-	}
-	
-	@Override
-	public Dominio get(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, long tableId, org.openspcoop2.generic_project.beans.IDMappingBehaviour idMappingResolutionBehaviour) throws NotFoundException, MultipleResultException, NotImplementedException, ServiceException, Exception {
+	public AvvisoDigitaleEsito get(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, long tableId, org.openspcoop2.generic_project.beans.IDMappingBehaviour idMappingResolutionBehaviour) throws NotFoundException, MultipleResultException, NotImplementedException, ServiceException, Exception {
 		return this._get(jdbcProperties, log, connection, sqlQueryObject, Long.valueOf(tableId), idMappingResolutionBehaviour);
 	}
 	
-	private Dominio _get(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, Long tableId, org.openspcoop2.generic_project.beans.IDMappingBehaviour idMappingResolutionBehaviour) throws NotFoundException, MultipleResultException, NotImplementedException, ServiceException, Exception {
-	
-		IField idField = new CustomField("id", Long.class, "id", this.getDominioFieldConverter().toTable(Dominio.model()));
+	private AvvisoDigitaleEsito _get(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, Long tableId, org.openspcoop2.generic_project.beans.IDMappingBehaviour idMappingResolutionBehaviour) throws NotFoundException, MultipleResultException, NotImplementedException, ServiceException, Exception {
+		
+		IField idField = new CustomField("id", Long.class, "id", this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model()));
 		JDBCPaginatedExpression expression = this.newPaginatedExpression(log);
 		
 		expression.equals(idField, tableId);
 		expression.offset(0);
-		expression.limit(2); //per verificare la multiple results
-		expression.addOrder(idField, org.openspcoop2.generic_project.expression.SortOrder.ASC);
-		List<Dominio> lst = this.findAll(jdbcProperties, log, connection, sqlQueryObject.newSQLQueryObject(), expression, idMappingResolutionBehaviour);
+		expression.limit(2);expression.addOrder(idField, org.openspcoop2.generic_project.expression.SortOrder.ASC); //per verificare la multiple results
+				
+		List<AvvisoDigitaleEsito> lst = this.findAll(jdbcProperties, log, connection, sqlQueryObject.newSQLQueryObject(), expression, idMappingResolutionBehaviour);
 		
 		if(lst.size() <=0)
 			throw new NotFoundException("Id ["+tableId+"]");
-				
+
 		if(lst.size() > 1)
 			throw new MultipleResultException("Id ["+tableId+"]");
-		
-		return lst.get(0);
 
+
+		return lst.get(0);
 	
 	} 
 	
@@ -551,78 +441,61 @@ zzz
 		org.openspcoop2.generic_project.dao.jdbc.utils.JDBCPreparedStatementUtilities jdbcUtilities = 
 					new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCPreparedStatementUtilities(sqlQueryObject.getTipoDatabaseOpenSPCoop2(), log, connection);
 				
-		boolean existsDominio = false;
+		boolean existsAvvisoDigitaleEsito = false;
 
 		sqlQueryObject = sqlQueryObject.newSQLQueryObject();
 		sqlQueryObject.setANDLogicOperator(true);
 
-		sqlQueryObject.addFromTable(this.getDominioFieldConverter().toTable(Dominio.model()));
-		sqlQueryObject.addSelectField(this.getDominioFieldConverter().toColumn(Dominio.model().COD_DOMINIO,true));
+		sqlQueryObject.addFromTable(this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model()));
+		sqlQueryObject.addSelectField(this.getAvvisoDigitaleEsitoFieldConverter().toColumn(AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA,true));
 		sqlQueryObject.addWhereCondition("id=?");
 
 
-		// Exists dominio
-		existsDominio = jdbcUtilities.exists(sqlQueryObject.createSQLQuery(), jdbcProperties.isShowSql(),
+		// Exists avvisoDigitaleEsito
+		existsAvvisoDigitaleEsito = jdbcUtilities.exists(sqlQueryObject.createSQLQuery(), jdbcProperties.isShowSql(),
 			new JDBCObject(tableId,Long.class));
 
 		
-        return existsDominio;
+        return existsAvvisoDigitaleEsito;
 	
 	}
 	
 	private void _join(IExpression expression, ISQLQueryObject sqlQueryObject) throws NotImplementedException, ServiceException, Exception{
 	
-		if(expression.inUseModel(Dominio.model().ID_STAZIONE,false)){
-			String tableName1 = this.getDominioFieldConverter().toAliasTable(Dominio.model());
-			String tableName2 = this.getDominioFieldConverter().toAliasTable(Dominio.model().ID_STAZIONE);
-			sqlQueryObject.addWhereCondition(tableName1+".id_stazione="+tableName2+".id");
-		}
-		
-		if(expression.inUseModel(Dominio.model().ID_APPLICAZIONE_DEFAULT,false)){
-			String tableName1 = this.getDominioFieldConverter().toAliasTable(Dominio.model());
-			String tableName2 = this.getDominioFieldConverter().toAliasTable(Dominio.model().ID_APPLICAZIONE_DEFAULT);
-			sqlQueryObject.addWhereCondition(tableName1+".id_applicazione_default="+tableName2+".id");
+		if(expression.inUseModel(AvvisoDigitaleEsito.model().ID_AVVISO_DIGITALE,false)){
+			String tableName1 = this.getAvvisoDigitaleEsitoFieldConverter().toAliasTable(AvvisoDigitaleEsito.model());
+			String tableName2 = this.getAvvisoDigitaleEsitoFieldConverter().toAliasTable(AvvisoDigitaleEsito.model().ID_AVVISO_DIGITALE);
+			sqlQueryObject.addWhereCondition(tableName1+".id_avviso_digitale="+tableName2+".id");
 		}
 		
 	}
 	
-	protected java.util.List<Object> _getRootTablePrimaryKeyValues(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, IdDominio id) throws NotFoundException, ServiceException, NotImplementedException, Exception{
+	protected java.util.List<Object> _getRootTablePrimaryKeyValues(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, AvvisoDigitaleEsito avvisoDigitaleEsito) throws NotFoundException, ServiceException, NotImplementedException, Exception{
 	    // Identificativi
         java.util.List<Object> rootTableIdValues = new java.util.ArrayList<Object>();
-		Long longId = this.findIdDominio(jdbcProperties, log, connection, sqlQueryObject.newSQLQueryObject(), id, true);
-		rootTableIdValues.add(longId);
-        
+		rootTableIdValues.add(avvisoDigitaleEsito.getId());
         
         return rootTableIdValues;
 	}
 	
 	protected Map<String, List<IField>> _getMapTableToPKColumn() throws NotImplementedException, Exception{
 	
-		DominioFieldConverter converter = this.getDominioFieldConverter();
+		AvvisoDigitaleEsitoFieldConverter converter = this.getAvvisoDigitaleEsitoFieldConverter();
 		Map<String, List<IField>> mapTableToPKColumn = new java.util.Hashtable<String, List<IField>>();
 		UtilsTemplate<IField> utilities = new UtilsTemplate<IField>();
 
-		//		  If a table doesn't have a primary key, don't add it to this map
-
-		// Dominio.model()
-		mapTableToPKColumn.put(converter.toTable(Dominio.model()),
+		// AvvisoDigitaleEsito.model()
+		mapTableToPKColumn.put(converter.toTable(AvvisoDigitaleEsito.model()),
 			utilities.newList(
-				new CustomField("id", Long.class, "id", converter.toTable(Dominio.model()))
+				new CustomField("id", Long.class, "id", converter.toTable(AvvisoDigitaleEsito.model()))
 			));
 
-		// Dominio.model().ID_STAZIONE
-		mapTableToPKColumn.put(converter.toTable(Dominio.model().ID_STAZIONE),
+		// AvvisoDigitaleEsito.model().ID_AVVISO_DIGITALE
+		mapTableToPKColumn.put(converter.toTable(AvvisoDigitaleEsito.model().ID_AVVISO_DIGITALE),
 			utilities.newList(
-				new CustomField("id", Long.class, "id", converter.toTable(Dominio.model().ID_STAZIONE))
+				new CustomField("id", Long.class, "id", converter.toTable(AvvisoDigitaleEsito.model().ID_AVVISO_DIGITALE))
 			));
 
-		// Dominio.model().ID_APPLICAZIONE_DEFAULT
-		mapTableToPKColumn.put(converter.toTable(Dominio.model().ID_APPLICAZIONE_DEFAULT),
-			utilities.newList(
-				new CustomField("id", Long.class, "id", converter.toTable(Dominio.model().ID_APPLICAZIONE_DEFAULT))
-			));
-
-        
         return mapTableToPKColumn;		
 	}
 	
@@ -633,16 +506,16 @@ zzz
 
 		sqlQueryObject.setSelectDistinct(true);
 		sqlQueryObject.setANDLogicOperator(true);
-		sqlQueryObject.addSelectField(this.getDominioFieldConverter().toTable(Dominio.model())+".id");
+		sqlQueryObject.addSelectField(this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model())+".id");
 		Class<?> objectIdClass = Long.class;
 		
 		List<Object> listaQuery = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.prepareFindAll(jdbcProperties, log, connection, sqlQueryObject, paginatedExpression,
-												this.getDominioFieldConverter(), Dominio.model());
+												this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model());
 		
 		_join(paginatedExpression,sqlQueryObject);
 		
 		List<Object> listObjects = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.findAll(jdbcProperties, log, connection, sqlQueryObject, paginatedExpression,
-																			this.getDominioFieldConverter(), Dominio.model(), objectIdClass, listaQuery);
+																			this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model(), objectIdClass, listaQuery);
 		for(Object object: listObjects) {
 			list.add((Long)object);
 		}
@@ -656,16 +529,16 @@ zzz
 	
 		sqlQueryObject.setSelectDistinct(true);
 		sqlQueryObject.setANDLogicOperator(true);
-		sqlQueryObject.addSelectField(this.getDominioFieldConverter().toTable(Dominio.model())+".id");
+		sqlQueryObject.addSelectField(this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model())+".id");
 		Class<?> objectIdClass = Long.class;
 		
 		List<Object> listaQuery = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.prepareFind(jdbcProperties, log, connection, sqlQueryObject, expression,
-												this.getDominioFieldConverter(), Dominio.model());
+												this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model());
 		
 		_join(expression,sqlQueryObject);
 
 		Object res = org.openspcoop2.generic_project.dao.jdbc.utils.JDBCUtilities.find(jdbcProperties, log, connection, sqlQueryObject, expression,
-														this.getDominioFieldConverter(), Dominio.model(), objectIdClass, listaQuery);
+														this.getAvvisoDigitaleEsitoFieldConverter(), AvvisoDigitaleEsito.model(), objectIdClass, listaQuery);
 		if(res!=null && (((Long) res).longValue()>0) ){
 			return ((Long) res).longValue();
 		}
@@ -685,63 +558,11 @@ zzz
 		InUse inUse = new InUse();
 		inUse.setInUse(false);
 		
-		// Delete this line when you have implemented the method
-		int throwNotImplemented = 1;
-		if(throwNotImplemented==1){
-		        throw new NotImplementedException("NotImplemented");
-		}
-		// Delete this line when you have implemented the method
-
         return inUse;
 
 	}
 	
-	@Override
-	public IdDominio findId(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, long tableId, boolean throwNotFound)
-			throws NotFoundException, ServiceException, NotImplementedException, Exception {
-		
-		org.openspcoop2.generic_project.dao.jdbc.utils.JDBCPreparedStatementUtilities jdbcUtilities = 
-			new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCPreparedStatementUtilities(sqlQueryObject.getTipoDatabaseOpenSPCoop2(), log, connection);
 
-		ISQLQueryObject sqlQueryObjectGet = sqlQueryObject.newSQLQueryObject();
-
-
-		// Object _dominio
-		sqlQueryObjectGet.addFromTable(this.getDominioFieldConverter().toTable(Dominio.model()));
-		sqlQueryObjectGet.addSelectField(this.getDominioFieldConverter().toColumn(Dominio.model().COD_DOMINIO,true));
-		sqlQueryObjectGet.setANDLogicOperator(true);
-		sqlQueryObjectGet.addWhereCondition("id=?");
-
-		// Recupero _dominio
-		org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject [] searchParams_dominio = new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject [] { 
-			new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject(tableId,Long.class)
-		};
-		List<Class<?>> listaFieldIdReturnType_dominio = new ArrayList<Class<?>>();
-		listaFieldIdReturnType_dominio.add(Dominio.model().COD_DOMINIO.getFieldType());
-		it.govpay.orm.IdDominio id_dominio = null;
-		List<Object> listaFieldId_dominio = jdbcUtilities.executeQuerySingleResult(sqlQueryObjectGet.createSQLQuery(), jdbcProperties.isShowSql(),
-				listaFieldIdReturnType_dominio, searchParams_dominio);
-		if(listaFieldId_dominio==null || listaFieldId_dominio.size()<=0){
-			if(throwNotFound){
-				throw new NotFoundException("Not Found");
-			}
-		}
-		else{
-			id_dominio = new it.govpay.orm.IdDominio();
-			id_dominio.setCodDominio((String)listaFieldId_dominio.get(0));
-		}
-		
-		return id_dominio;
-		
-	}
-
-	@Override
-	public Long findTableId(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, IdDominio id, boolean throwNotFound)
-			throws NotFoundException, ServiceException, NotImplementedException, Exception {
-	
-		return this.findIdDominio(jdbcProperties,log,connection,sqlQueryObject,id,throwNotFound);
-			
-	}
 	
 	@Override
 	public List<List<Object>> nativeQuery(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, 
@@ -752,40 +573,4 @@ zzz
 														
 	}
 	
-	protected Long findIdDominio(JDBCServiceManagerProperties jdbcProperties, Logger log, Connection connection, ISQLQueryObject sqlQueryObject, IdDominio id, boolean throwNotFound) throws NotFoundException, ServiceException, NotImplementedException, Exception {
-
-		org.openspcoop2.generic_project.dao.jdbc.utils.JDBCPreparedStatementUtilities jdbcUtilities = 
-			new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCPreparedStatementUtilities(sqlQueryObject.getTipoDatabaseOpenSPCoop2(), log, connection);
-
-		ISQLQueryObject sqlQueryObjectGet = sqlQueryObject.newSQLQueryObject();
-
-
-		// Object _dominio
-		sqlQueryObjectGet.addFromTable(this.getDominioFieldConverter().toTable(Dominio.model()));
-		sqlQueryObjectGet.addSelectField("id");
-		sqlQueryObjectGet.setANDLogicOperator(true);
-		sqlQueryObjectGet.setSelectDistinct(true);
-		sqlQueryObjectGet.addWhereCondition(this.getDominioFieldConverter().toColumn(Dominio.model().COD_DOMINIO,true)+"=?");
-
-		// Recupero _dominio
-		org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject [] searchParams_dominio = new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject [] { 
-			new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject(id.getCodDominio(),Dominio.model().COD_DOMINIO.getFieldType()),
-		};
-		Long id_dominio = null;
-		try{
-			id_dominio = (Long) jdbcUtilities.executeQuerySingleResult(sqlQueryObjectGet.createSQLQuery(), jdbcProperties.isShowSql(),
-						Long.class, searchParams_dominio);
-		}catch(NotFoundException notFound){
-			if(throwNotFound){
-				throw new NotFoundException(notFound);
-			}
-		}
-		if(id_dominio==null || id_dominio<=0){
-			if(throwNotFound){
-				throw new NotFoundException("Not Found");
-			}
-		}
-		
-		return id_dominio;
-	}
 }

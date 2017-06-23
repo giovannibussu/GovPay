@@ -21,11 +21,15 @@ package it.govpay.bd;
 
 import it.govpay.orm.dao.IACLService;
 import it.govpay.orm.dao.IApplicazioneService;
+import it.govpay.orm.dao.IAvvisoDigitaleEsitoService;
+import it.govpay.orm.dao.IAvvisoDigitaleService;
 import it.govpay.orm.dao.IBatchService;
 import it.govpay.orm.dao.ICanaleService;
 import it.govpay.orm.dao.IConnettoreService;
 import it.govpay.orm.dao.IDBACLService;
 import it.govpay.orm.dao.IDBApplicazioneService;
+import it.govpay.orm.dao.IDBAvvisoDigitaleEsitoService;
+import it.govpay.orm.dao.IDBAvvisoDigitaleService;
 import it.govpay.orm.dao.IDBBatchService;
 import it.govpay.orm.dao.IDBCanaleService;
 import it.govpay.orm.dao.IDBConnettoreService;
@@ -89,6 +93,8 @@ public class BasicBD {
 	
 	private IApplicazioneService applicazioneService;
 	private IACLService aclService;
+	private IAvvisoDigitaleService avvisoDigitaleService;
+	private IAvvisoDigitaleEsitoService avvisoDigitaleEsitoService;
 	private IBatchService batchService;
 	private ICanaleService canaleService;
 	private IConnettoreService connettoreService;
@@ -157,6 +163,8 @@ public class BasicBD {
 			try {
 				this.applicazioneService = this.serviceManager.getApplicazioneService();
 				this.aclService = this.serviceManager.getACLService();
+				this.avvisoDigitaleService = this.serviceManager.getAvvisoDigitaleService();
+				this.avvisoDigitaleEsitoService = this.serviceManager.getAvvisoDigitaleEsitoService();
 				this.batchService = this.serviceManager.getBatchService();
 				this.canaleService = this.serviceManager.getCanaleService();
 				this.connettoreService = this.serviceManager.getConnettoreService();
@@ -198,6 +206,8 @@ public class BasicBD {
 		try {
 			((IDBApplicazioneService)this.applicazioneService).enableSelectForUpdate();
 			((IDBACLService)this.aclService).enableSelectForUpdate();
+			((IDBAvvisoDigitaleService)this.avvisoDigitaleService).enableSelectForUpdate();
+			((IDBAvvisoDigitaleEsitoService)this.avvisoDigitaleEsitoService).enableSelectForUpdate();
 			((IDBBatchService)this.batchService).enableSelectForUpdate();
 			((IDBCanaleService)this.canaleService).enableSelectForUpdate();
 			((IDBConnettoreService)this.connettoreService).enableSelectForUpdate();
@@ -235,6 +245,8 @@ public class BasicBD {
 		try {
 			((IDBApplicazioneService)this.applicazioneService).disableSelectForUpdate();
 			((IDBACLService)this.aclService).disableSelectForUpdate();
+			((IDBAvvisoDigitaleService)this.avvisoDigitaleService).disableSelectForUpdate();
+			((IDBAvvisoDigitaleEsitoService)this.avvisoDigitaleEsitoService).disableSelectForUpdate();
 			((IDBBatchService)this.batchService).disableSelectForUpdate();
 			((IDBCanaleService)this.canaleService).disableSelectForUpdate();
 			((IDBConnettoreService)this.connettoreService).disableSelectForUpdate();
@@ -284,6 +296,20 @@ public class BasicBD {
 			return father.getAclService();
 		}
 		return aclService;
+	}
+
+	public IAvvisoDigitaleService getAvvisoDigitaleService() {
+		if(father != null) {
+			return father.getAvvisoDigitaleService();
+		}
+		return avvisoDigitaleService;
+	}
+
+	public IAvvisoDigitaleEsitoService getAvvisoDigitaleEsitoService() {
+		if(father != null) {
+			return father.getAvvisoDigitaleEsitoService();
+		}
+		return avvisoDigitaleEsitoService;
 	}
 
 	public IBatchService getBatchService() {
