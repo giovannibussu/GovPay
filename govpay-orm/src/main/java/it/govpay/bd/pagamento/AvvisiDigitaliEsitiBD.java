@@ -24,10 +24,12 @@ import it.govpay.bd.IFilter;
 import it.govpay.bd.model.converter.AvvisoDigitaleEsitoConverter;
 import it.govpay.bd.pagamento.filters.AvvisiDigitaliEsitiFilter;
 import it.govpay.model.AvvisoDigitaleEsito;
+import it.govpay.orm.dao.jdbc.JDBCAvvisoDigitaleEsitoServiceSearch;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openspcoop2.generic_project.exception.MultipleResultException;
 import org.openspcoop2.generic_project.exception.NotFoundException;
 import org.openspcoop2.generic_project.exception.NotImplementedException;
 import org.openspcoop2.generic_project.exception.ServiceException;
@@ -60,6 +62,17 @@ public class AvvisiDigitaliEsitiBD extends BasicBD {
 		return dto;
 	}
 	
+	public AvvisoDigitaleEsito get(long idAvvisoDigitaleEsito) throws ServiceException, NotFoundException {
+		try {
+			it.govpay.orm.AvvisoDigitaleEsito avvisoDigitaleEsito = ((JDBCAvvisoDigitaleEsitoServiceSearch)this.getAvvisoDigitaleEsitoService()).get(idAvvisoDigitaleEsito); 
+			return AvvisoDigitaleEsitoConverter.toDTO(avvisoDigitaleEsito);
+		} catch (MultipleResultException e) {
+			throw new ServiceException(e);
+		} catch (NotImplementedException e) {
+			throw new ServiceException(e);
+		}
+	}
+
 	public AvvisiDigitaliEsitiFilter newFilter() throws ServiceException {
 		return new AvvisiDigitaliEsitiFilter(this.getAvvisoDigitaleEsitoService());
 	}

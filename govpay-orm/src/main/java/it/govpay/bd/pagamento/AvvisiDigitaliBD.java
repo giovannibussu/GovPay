@@ -26,6 +26,7 @@ import it.govpay.bd.model.converter.AvvisoDigitaleConverter;
 import it.govpay.bd.pagamento.filters.AvvisiDigitaliFilter;
 import it.govpay.model.AvvisoDigitale;
 import it.govpay.orm.IdAvvisoDigitale;
+import it.govpay.orm.dao.jdbc.JDBCAvvisoDigitaleServiceSearch;
 import it.govpay.orm.dao.jdbc.converter.AvvisoDigitaleFieldConverter;
 
 import java.util.ArrayList;
@@ -97,12 +98,25 @@ public class AvvisiDigitaliBD extends BasicBD {
 		}
 	}
 
-	public AvvisoDigitale get(String idMessaggioRichiesta) throws ServiceException, NotFoundException, MultipleResultException {
+	public AvvisoDigitale get(String idMessaggioRichiesta) throws ServiceException, NotFoundException {
 		try {
 			IdAvvisoDigitale id = new IdAvvisoDigitale();
 			id.setIdMessaggioRichiesta(idMessaggioRichiesta);
 			it.govpay.orm.AvvisoDigitale avvisoDigitale = this.getAvvisoDigitaleService().get(id); 
 			return AvvisoDigitaleConverter.toDTO(avvisoDigitale);
+		} catch (MultipleResultException e) {
+			throw new ServiceException(e);
+		} catch (NotImplementedException e) {
+			throw new ServiceException(e);
+		}
+	}
+
+	public AvvisoDigitale get(long idAvvisoDigitale) throws ServiceException, NotFoundException {
+		try {
+			it.govpay.orm.AvvisoDigitale avvisoDigitale = ((JDBCAvvisoDigitaleServiceSearch)this.getAvvisoDigitaleService()).get(idAvvisoDigitale); 
+			return AvvisoDigitaleConverter.toDTO(avvisoDigitale);
+		} catch (MultipleResultException e) {
+			throw new ServiceException(e);
 		} catch (NotImplementedException e) {
 			throw new ServiceException(e);
 		}

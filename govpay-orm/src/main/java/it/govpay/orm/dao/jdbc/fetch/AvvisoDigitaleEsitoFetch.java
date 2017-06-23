@@ -54,8 +54,6 @@ public class AvvisoDigitaleEsitoFetch extends AbstractJDBCFetch {
 				AvvisoDigitaleEsito object = new AvvisoDigitaleEsito();
 				setParameter(object, "setId", Long.class,
 					jdbcParameterUtilities.readParameter(rs, "id", Long.class));
-				setParameter(object, "setIdMessaggioRichiesta", AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA.getFieldType(),
-					jdbcParameterUtilities.readParameter(rs, "id_messaggio_richiesta", AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA.getFieldType()));
 				setParameter(object, "setIdentificativoCanale", AvvisoDigitaleEsito.model().IDENTIFICATIVO_CANALE.getFieldType(),
 					jdbcParameterUtilities.readParameter(rs, "identificativo_canale", AvvisoDigitaleEsito.model().IDENTIFICATIVO_CANALE.getFieldType()));
 				setParameter(object, "setTipoCanaleEsito", AvvisoDigitaleEsito.model().TIPO_CANALE_ESITO.getFieldType(),
@@ -88,8 +86,6 @@ public class AvvisoDigitaleEsitoFetch extends AbstractJDBCFetch {
 				AvvisoDigitaleEsito object = new AvvisoDigitaleEsito();
 				setParameter(object, "setId", Long.class,
 					this.getObjectFromMap(map,"id"));
-				setParameter(object, "setIdMessaggioRichiesta", AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA.getFieldType(),
-					this.getObjectFromMap(map,"idMessaggioRichiesta"));
 				setParameter(object, "setIdentificativoCanale", AvvisoDigitaleEsito.model().IDENTIFICATIVO_CANALE.getFieldType(),
 					this.getObjectFromMap(map,"identificativoCanale"));
 				setParameter(object, "setTipoCanaleEsito", AvvisoDigitaleEsito.model().TIPO_CANALE_ESITO.getFieldType(),

@@ -29,7 +29,6 @@ public class AvvisoDigitaleEsitoConverter {
 	public static AvvisoDigitaleEsito toDTO(it.govpay.orm.AvvisoDigitaleEsito vo) throws ServiceException {
 		AvvisoDigitaleEsito dto = new AvvisoDigitaleEsito();
 
-		dto.setIdMessaggioRichiesta(vo.getIdMessaggioRichiesta());
 		dto.setIdAvvisoDigitale(vo.getIdAvvisoDigitale().getId());
 		dto.setIdentificativoCanale(vo.getIdentificativoCanale());
 		dto.setTipoCanaleEsito(vo.getTipoCanaleEsito());
@@ -43,8 +42,6 @@ public class AvvisoDigitaleEsitoConverter {
 
 	public static it.govpay.orm.AvvisoDigitaleEsito toVO(AvvisoDigitaleEsito dto) {
 		it.govpay.orm.AvvisoDigitaleEsito vo = new it.govpay.orm.AvvisoDigitaleEsito();
-		
-		vo.setIdMessaggioRichiesta(dto.getIdMessaggioRichiesta());
 		
 		IdAvvisoDigitale idAvvisoDigitale = new IdAvvisoDigitale();
 		idAvvisoDigitale.setId(dto.getIdAvvisoDigitale());

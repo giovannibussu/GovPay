@@ -41,7 +41,6 @@ public class AvvisoDigitaleEsitoModel extends AbstractModel<AvvisoDigitaleEsito>
 	
 		super();
 	
-		this.ID_MESSAGGIO_RICHIESTA = new Field("idMessaggioRichiesta",java.lang.String.class,"AvvisoDigitaleEsito",AvvisoDigitaleEsito.class);
 		this.ID_AVVISO_DIGITALE = new it.govpay.orm.model.IdAvvisoDigitaleModel(new Field("idAvvisoDigitale",it.govpay.orm.IdAvvisoDigitale.class,"AvvisoDigitaleEsito",AvvisoDigitaleEsito.class));
 		this.IDENTIFICATIVO_CANALE = new Field("identificativoCanale",java.lang.String.class,"AvvisoDigitaleEsito",AvvisoDigitaleEsito.class);
 		this.TIPO_CANALE_ESITO = new Field("tipoCanaleEsito",long.class,"AvvisoDigitaleEsito",AvvisoDigitaleEsito.class);
@@ -55,7 +54,6 @@ public class AvvisoDigitaleEsitoModel extends AbstractModel<AvvisoDigitaleEsito>
 	
 		super(father);
 	
-		this.ID_MESSAGGIO_RICHIESTA = new ComplexField(father,"idMessaggioRichiesta",java.lang.String.class,"AvvisoDigitaleEsito",AvvisoDigitaleEsito.class);
 		this.ID_AVVISO_DIGITALE = new it.govpay.orm.model.IdAvvisoDigitaleModel(new ComplexField(father,"idAvvisoDigitale",it.govpay.orm.IdAvvisoDigitale.class,"AvvisoDigitaleEsito",AvvisoDigitaleEsito.class));
 		this.IDENTIFICATIVO_CANALE = new ComplexField(father,"identificativoCanale",java.lang.String.class,"AvvisoDigitaleEsito",AvvisoDigitaleEsito.class);
 		this.TIPO_CANALE_ESITO = new ComplexField(father,"tipoCanaleEsito",long.class,"AvvisoDigitaleEsito",AvvisoDigitaleEsito.class);
@@ -67,8 +65,6 @@ public class AvvisoDigitaleEsitoModel extends AbstractModel<AvvisoDigitaleEsito>
 	
 	
 
-	public IField ID_MESSAGGIO_RICHIESTA = null;
-	 
 	public it.govpay.orm.model.IdAvvisoDigitaleModel ID_AVVISO_DIGITALE = null;
 	 
 	public IField IDENTIFICATIVO_CANALE = null;

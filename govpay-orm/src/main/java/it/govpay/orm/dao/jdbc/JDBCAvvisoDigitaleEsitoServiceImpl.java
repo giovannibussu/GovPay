@@ -89,7 +89,6 @@ public class JDBCAvvisoDigitaleEsitoServiceImpl extends JDBCAvvisoDigitaleEsitoS
 
 		// Object avvisoDigitaleEsito
 		sqlQueryObjectInsert.addInsertTable(this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model()));
-		sqlQueryObjectInsert.addInsertField(this.getAvvisoDigitaleEsitoFieldConverter().toColumn(AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA,false),"?");
 		sqlQueryObjectInsert.addInsertField(this.getAvvisoDigitaleEsitoFieldConverter().toColumn(AvvisoDigitaleEsito.model().IDENTIFICATIVO_CANALE,false),"?");
 		sqlQueryObjectInsert.addInsertField(this.getAvvisoDigitaleEsitoFieldConverter().toColumn(AvvisoDigitaleEsito.model().TIPO_CANALE_ESITO,false),"?");
 		sqlQueryObjectInsert.addInsertField(this.getAvvisoDigitaleEsitoFieldConverter().toColumn(AvvisoDigitaleEsito.model().DATA_ESITO,false),"?");
@@ -100,7 +99,6 @@ public class JDBCAvvisoDigitaleEsitoServiceImpl extends JDBCAvvisoDigitaleEsitoS
 		// Insert avvisoDigitaleEsito
 		org.openspcoop2.utils.jdbc.IKeyGeneratorObject keyGenerator = this.getAvvisoDigitaleEsitoFetch().getKeyGeneratorObject(AvvisoDigitaleEsito.model());
 		long id = jdbcUtilities.insertAndReturnGeneratedKey(sqlQueryObjectInsert, keyGenerator, jdbcProperties.isShowSql(),
-			new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject(avvisoDigitaleEsito.getIdMessaggioRichiesta(),AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA.getFieldType()),
 			new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject(avvisoDigitaleEsito.getIdentificativoCanale(),AvvisoDigitaleEsito.model().IDENTIFICATIVO_CANALE.getFieldType()),
 			new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject(avvisoDigitaleEsito.getTipoCanaleEsito(),AvvisoDigitaleEsito.model().TIPO_CANALE_ESITO.getFieldType()),
 			new org.openspcoop2.generic_project.dao.jdbc.utils.JDBCObject(avvisoDigitaleEsito.getDataEsito(),AvvisoDigitaleEsito.model().DATA_ESITO.getFieldType()),
@@ -167,8 +165,6 @@ public class JDBCAvvisoDigitaleEsitoServiceImpl extends JDBCAvvisoDigitaleEsitoS
 		sqlQueryObjectUpdate.addUpdateTable(this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model()));
 		boolean isUpdate_avvisoDigitaleEsito = true;
 		java.util.List<JDBCObject> lstObjects_avvisoDigitaleEsito = new java.util.ArrayList<JDBCObject>();
-		sqlQueryObjectUpdate.addUpdateField(this.getAvvisoDigitaleEsitoFieldConverter().toColumn(AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA,false), "?");
-		lstObjects_avvisoDigitaleEsito.add(new JDBCObject(avvisoDigitaleEsito.getIdMessaggioRichiesta(), AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA.getFieldType()));
 		sqlQueryObjectUpdate.addUpdateField(this.getAvvisoDigitaleEsitoFieldConverter().toColumn(AvvisoDigitaleEsito.model().IDENTIFICATIVO_CANALE,false), "?");
 		lstObjects_avvisoDigitaleEsito.add(new JDBCObject(avvisoDigitaleEsito.getIdentificativoCanale(), AvvisoDigitaleEsito.model().IDENTIFICATIVO_CANALE.getFieldType()));
 		sqlQueryObjectUpdate.addUpdateField(this.getAvvisoDigitaleEsitoFieldConverter().toColumn(AvvisoDigitaleEsito.model().TIPO_CANALE_ESITO,false), "?");

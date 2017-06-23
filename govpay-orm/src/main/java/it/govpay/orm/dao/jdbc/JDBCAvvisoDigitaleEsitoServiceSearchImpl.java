@@ -114,7 +114,6 @@ public class JDBCAvvisoDigitaleEsitoServiceSearchImpl implements IJDBCServiceSea
 			List<IField> fields = new ArrayList<IField>();
 			fields.add(new CustomField("id_avviso_digitale", Long.class, "id_avviso_digitale", this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model())));
             fields.add(new CustomField("id", Long.class, "id", this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model())));
-    		fields.add(AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA);
     		fields.add(AvvisoDigitaleEsito.model().IDENTIFICATIVO_CANALE);
     		fields.add(AvvisoDigitaleEsito.model().TIPO_CANALE_ESITO);
     		fields.add(AvvisoDigitaleEsito.model().DATA_ESITO);
@@ -447,7 +446,7 @@ public class JDBCAvvisoDigitaleEsitoServiceSearchImpl implements IJDBCServiceSea
 		sqlQueryObject.setANDLogicOperator(true);
 
 		sqlQueryObject.addFromTable(this.getAvvisoDigitaleEsitoFieldConverter().toTable(AvvisoDigitaleEsito.model()));
-		sqlQueryObject.addSelectField(this.getAvvisoDigitaleEsitoFieldConverter().toColumn(AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA,true));
+		sqlQueryObject.addSelectField(this.getAvvisoDigitaleEsitoFieldConverter().toColumn(AvvisoDigitaleEsito.model().TIPO_CANALE_ESITO,true));
 		sqlQueryObject.addWhereCondition("id=?");
 
 

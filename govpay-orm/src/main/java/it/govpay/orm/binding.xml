@@ -387,7 +387,6 @@
   </mapping>
   <mapping name="AvvisoDigitaleEsito" class="it.govpay.orm.AvvisoDigitaleEsito">
     <namespace uri="http://www.govpay.it/orm" default="elements"/>
-    <value name="idMessaggioRichiesta" field="idMessaggioRichiesta" usage="required"/>
     <structure field="idAvvisoDigitale" usage="required" map-as="it.govpay.orm.IdAvvisoDigitale"/>
     <value name="identificativoCanale" field="identificativoCanale" usage="optional"/>
     <value name="tipoCanaleEsito" field="tipoCanaleEsito" usage="required"/>

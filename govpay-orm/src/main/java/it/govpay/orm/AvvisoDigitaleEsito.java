@@ -35,7 +35,6 @@ import java.io.Serializable;
  * <pre>
  * &lt;complexType name="AvvisoDigitaleEsito">
  * 		&lt;sequence>
- * 			&lt;element name="idMessaggioRichiesta" type="{http://www.govpay.it/orm}string" minOccurs="1" maxOccurs="1"/>
  * 			&lt;element name="idAvvisoDigitale" type="{http://www.govpay.it/orm}id-avviso-digitale" minOccurs="1" maxOccurs="1"/>
  * 			&lt;element name="identificativoCanale" type="{http://www.govpay.it/orm}string" minOccurs="0" maxOccurs="1"/>
  * 			&lt;element name="tipoCanaleEsito" type="{http://www.w3.org/2001/XMLSchema}long" minOccurs="1" maxOccurs="1"/>
@@ -56,7 +55,6 @@ import java.io.Serializable;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "AvvisoDigitaleEsito", 
   propOrder = {
-  	"idMessaggioRichiesta",
   	"idAvvisoDigitale",
   	"identificativoCanale",
   	"tipoCanaleEsito",
@@ -84,14 +82,6 @@ public class AvvisoDigitaleEsito extends org.openspcoop2.utils.beans.BaseBean im
 		this.id=id;
 	else
 		this.id=new Long(-1);
-  }
-
-  public java.lang.String getIdMessaggioRichiesta() {
-    return this.idMessaggioRichiesta;
-  }
-
-  public void setIdMessaggioRichiesta(java.lang.String idMessaggioRichiesta) {
-    this.idMessaggioRichiesta = idMessaggioRichiesta;
   }
 
   public IdAvvisoDigitale getIdAvvisoDigitale() {
@@ -160,10 +150,6 @@ public class AvvisoDigitaleEsito extends org.openspcoop2.utils.beans.BaseBean im
 	  return it.govpay.orm.AvvisoDigitaleEsito.modelStaticInstance;
   }
 
-
-  @javax.xml.bind.annotation.XmlSchemaType(name="string")
-  @XmlElement(name="idMessaggioRichiesta",required=true,nillable=false)
-  protected java.lang.String idMessaggioRichiesta;
 
   @XmlElement(name="idAvvisoDigitale",required=true,nillable=false)
   protected IdAvvisoDigitale idAvvisoDigitale;

@@ -4,8 +4,9 @@
 package it.govpay.bd.model;
 
 import it.govpay.bd.BasicBD;
-import it.govpay.bd.anagrafica.AnagraficaManager;
+import it.govpay.bd.pagamento.AvvisiDigitaliBD;
 
+import org.openspcoop2.generic_project.exception.NotFoundException;
 import org.openspcoop2.generic_project.exception.ServiceException;
 
 /**
@@ -16,11 +17,11 @@ public class AvvisoDigitaleEsito extends it.govpay.model.AvvisoDigitaleEsito {
 
 	private static final long serialVersionUID = 1L;
 	
-	private transient AvvisoDigitale avvisoDigitale;
+	private transient it.govpay.model.AvvisoDigitale avvisoDigitale;
 
-	public AvvisoDigitale getPsp(BasicBD bd) throws ServiceException {
+	public it.govpay.model.AvvisoDigitale getAvvisoDigitale(BasicBD bd) throws ServiceException, NotFoundException {
 		if(avvisoDigitale == null) {
-			avvisoDigitale = AnagraficaManager.getAvvisoDigitale(bd, this.getIdAvvisoDigitale());
+			avvisoDigitale = new AvvisiDigitaliBD(bd).get(this.getIdAvvisoDigitale());
 		}
 		return avvisoDigitale;
 	}

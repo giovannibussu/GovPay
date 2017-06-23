@@ -67,13 +67,6 @@ public class AvvisoDigitaleEsitoFieldConverter extends AbstractSQLFieldConverter
 		// it is possible to drive the choice whether to return only the alias or 
 		// the full definition of the column containing the alias
 		
-		if(field.equals(AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA)){
-			if(appendTablePrefix){
-				return this.toAliasTable(field)+".id_messaggio_richiesta";
-			}else{
-				return "id_messaggio_richiesta";
-			}
-		}
 		if(field.equals(AvvisoDigitaleEsito.model().ID_AVVISO_DIGITALE.ID_MESSAGGIO_RICHIESTA)){
 			if(appendTablePrefix){
 				return this.toAliasTable(field)+".id_messaggio_richiesta";
@@ -129,9 +122,6 @@ public class AvvisoDigitaleEsitoFieldConverter extends AbstractSQLFieldConverter
 		// it is possible to drive the choice whether to return only the alias or 
 		// the full definition of the table containing the alias
 		
-		if(field.equals(AvvisoDigitaleEsito.model().ID_MESSAGGIO_RICHIESTA)){
-			return this.toTable(AvvisoDigitaleEsito.model(), returnAlias);
-		}
 		if(field.equals(AvvisoDigitaleEsito.model().ID_AVVISO_DIGITALE.ID_MESSAGGIO_RICHIESTA)){
 			return this.toTable(AvvisoDigitaleEsito.model().ID_AVVISO_DIGITALE, returnAlias);
 		}

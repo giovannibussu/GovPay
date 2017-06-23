@@ -7,12 +7,6 @@ public class AvvisoDigitaleEsito extends BasicModel {
 
 	private static final long serialVersionUID = 1L;
 	
-	public String getIdMessaggioRichiesta() {
-		return idMessaggioRichiesta;
-	}
-	public void setIdMessaggioRichiesta(String idMessaggioRichiesta) {
-		this.idMessaggioRichiesta = idMessaggioRichiesta;
-	}
 	public long getIdAvvisoDigitale() {
 		return idAvvisoDigitale;
 	}
@@ -55,7 +49,6 @@ public class AvvisoDigitaleEsito extends BasicModel {
 	public void setId(long id) {
 		this.id = id;
 	}
-	private String idMessaggioRichiesta;
 	private long idAvvisoDigitale;
 	private String identificativoCanale;
 	private long tipoCanaleEsito;

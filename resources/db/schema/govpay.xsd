@@ -883,7 +883,6 @@
 			</xsd:appinfo>
 		</xsd:annotation>
 		<xsd:sequence>
-			<xsd:element name="idMessaggioRichiesta" type="String20"/>
 			<xsd:element name="idAvvisoDigitale" type="id-avviso-digitale">
 				<xsd:annotation>
 					<xsd:appinfo>

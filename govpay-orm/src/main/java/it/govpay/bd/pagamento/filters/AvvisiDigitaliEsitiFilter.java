@@ -1,7 +1,7 @@
 package it.govpay.bd.pagamento.filters;
 
 import it.govpay.bd.AbstractFilter;
-import it.govpay.orm.AvvisoDigitale;
+import it.govpay.orm.AvvisoDigitaleEsito;
 
 import org.apache.commons.lang.StringUtils;
 import org.openspcoop2.generic_project.dao.IExpressionConstructor;
@@ -34,7 +34,7 @@ public class AvvisiDigitaliEsitiFilter extends AbstractFilter{
 				if(addAnd)
 					newExpression.and();
 				
-				newExpression.equals(AvvisoDigitale.model().ID_MESSAGGIO_RICHIESTA, this.idMessaggioRichiesta);
+				newExpression.equals(AvvisoDigitaleEsito.model().ID_AVVISO_DIGITALE.ID_MESSAGGIO_RICHIESTA, this.idMessaggioRichiesta);
 				addAnd = true;
 			}
 			
